@@ -342,8 +342,8 @@ export default function MovieDetailPage() {
     if (!movie) return;
     
     setVideoHasStarted(false); // Resetear cuando se empieza a reproducir
-    setCapturingOnline(true);
-    setTorrentError(null);
+      setCapturingOnline(true);
+      setTorrentError(null);
 
     // 🚀 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
     try {
@@ -357,28 +357,28 @@ export default function MovieDetailPage() {
       logger.log(`📡 [HLS-PROXY] Respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
       
       if (proxyRes.ok && proxyData.playlistUrl) {
-        // Aplicar resume si existe progreso guardado
-        const savedProgress = watchHistory.getProgress('movie', movie.id.toString());
-        if (savedProgress && savedProgress.currentTime > 0) {
-          playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
-          (window as any).resumeTime = savedProgress.currentTime;
-        }
+          // Aplicar resume si existe progreso guardado
+          const savedProgress = watchHistory.getProgress('movie', movie.id.toString());
+          if (savedProgress && savedProgress.currentTime > 0) {
+            playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
+            (window as any).resumeTime = savedProgress.currentTime;
+          }
         
         // Configurar stream Original
         setDirectStreamUrl(proxyData.playlistUrl);
-        
+          
         // Subtítulos (ya vienen proxificados)
         if (proxyData.subtitles && proxyData.subtitles.length > 0) {
           logger.log(`📝 [HLS-PROXY] ${proxyData.subtitles.length} subtítulos recibidos`);
           setExternalSubtitles(proxyData.subtitles);
-        } else {
-          setExternalSubtitles([]);
-        }
-        
+          } else {
+            setExternalSubtitles([]);
+          }
+          
         // REPRODUCIR INMEDIATAMENTE
-        setIsPlaying(true);
-        const newUrl = cleanUrlKeepingWatchParty(movie.id);
-        window.history.replaceState({}, '', newUrl);
+          setIsPlaying(true);
+          const newUrl = cleanUrlKeepingWatchParty(movie.id);
+          window.history.replaceState({}, '', newUrl);
         playerLogger.log(`🎬 [HLS-PROXY] Reproduciendo Original (${proxyTime}ms)`);
         setCapturingOnline(false);
         
@@ -557,20 +557,20 @@ export default function MovieDetailPage() {
           if (proxyRes.ok && proxyData.playlistUrl) {
             // Configurar stream Original
             setDirectStreamUrl(proxyData.playlistUrl);
-            
+              
             // Subtítulos (ya vienen proxificados)
             if (proxyData.subtitles && proxyData.subtitles.length > 0) {
               logger.log(`📝 [AUTOPLAY] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
               setExternalSubtitles(proxyData.subtitles);
-            } else {
-              setExternalSubtitles([]);
-            }
-            
+              } else {
+                setExternalSubtitles([]);
+              }
+              
             // REPRODUCIR INMEDIATAMENTE
-            setIsPlaying(true);
+              setIsPlaying(true);
             playerLogger.log(`🎬 [AUTOPLAY] hls-browser-proxy Original (${proxyTime}ms)`);
-            const newUrl = cleanUrlKeepingWatchParty(movie.id);
-            window.history.replaceState({}, '', newUrl);
+              const newUrl = cleanUrlKeepingWatchParty(movie.id);
+              window.history.replaceState({}, '', newUrl);
             
             // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
             (async () => {

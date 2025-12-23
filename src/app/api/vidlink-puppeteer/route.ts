@@ -96,18 +96,18 @@ export async function GET(req: NextRequest) {
         
         if (testResponse.ok) {
           console.log(`⚡ [VIDLINK-CACHE-VERIFIED] M3U8 aún funciona (${testTime}ms)`);
-          return NextResponse.json({
-            streamUrl: cached.streamUrl,
-            sourceUrl: cached.sourceUrl,
-            type: cached.type,
-            id: cached.id,
-            season: cached.season,
-            episode: cached.episode,
-            subtitles: cached.subtitles || [],
-            cached: true,
-            cacheAgeDays: parseFloat(ageDays),
+      return NextResponse.json({
+        streamUrl: cached.streamUrl,
+        sourceUrl: cached.sourceUrl,
+        type: cached.type,
+        id: cached.id,
+        season: cached.season,
+        episode: cached.episode,
+        subtitles: cached.subtitles || [],
+        cached: true,
+        cacheAgeDays: parseFloat(ageDays),
             verifiedMs: testTime
-          });
+      });
         } else {
           console.log(`⚠️ [VIDLINK-CACHE-EXPIRED] M3U8 expirado (HTTP ${testResponse.status}), obteniendo nuevo...`);
         }
@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
     console.log(`🚀 [VIDLINK] Extrayendo m3u8 para ${sourceUrl}`);
     
     browser = await puppeteer.launch({ 
-      headless: true,
+      headless: true, 
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     
@@ -155,8 +155,8 @@ export async function GET(req: NextRequest) {
     
     // Anti-detección
     await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => false });
-      (window as any).chrome = { runtime: {} };
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+        (window as any).chrome = { runtime: {} };
     });
 
     // Cerrar popups
@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
       
       // Capturar M3U8
       if (/\.m3u8/i.test(url)) {
-        const score = scoreUrl(url);
+      const score = scoreUrl(url);
         
         if (!candidates.some(c => c.url === url)) {
           candidates.push({
@@ -217,12 +217,12 @@ export async function GET(req: NextRequest) {
       // Capturar subtítulos
       if (/\.vtt(\?|$)/i.test(url)) {
         if (!subtitles.some(s => s.url === url)) {
-          const lang = detectLanguage(url);
+      const lang = detectLanguage(url);
           subtitles.push({ url, lang });
           console.log(`[VTT-REQUEST] ${lang.name} - ${url.substring(0, 60)}...`);
         }
-      }
-      
+    }
+
       // IMPORTANTE: Continuar la request
       req.continue().catch(() => {});
     });
@@ -236,17 +236,17 @@ export async function GET(req: NextRequest) {
         if (score >= 150 && !foundM3u8) {
           foundM3u8 = url;
           console.log(`[M3U8-RESPONSE] Master confirmado: ${url.substring(0, 80)}...`);
-        }
+      }
       }
     });
 
     console.log(`📍 [VIDLINK] Navegando...`);
     
     try {
-      await page.goto(sourceUrl, { 
-        waitUntil: 'domcontentloaded',
+    await page.goto(sourceUrl, { 
+      waitUntil: 'domcontentloaded',
         timeout: 10000
-      });
+    });
     } catch (e) {
       // Puede fallar el timeout pero si ya tenemos M3U8 está bien
     }

@@ -310,12 +310,20 @@ export async function fetchAllVidifyStreams(
   tmdbId: string,
   type: 'movie' | 'tv' = 'tv',
   season?: number,
-  episode?: number
+  episode?: number,
+  excludeLatino: boolean = false
 ): Promise<VidifyStreamResult[]> {
   // OPTIMIZACIÓN PARA ESCALA: Usar el PRIMER servidor que responda por idioma
   // No hacer scoring - priorizar velocidad sobre calidad
   
-  const serversToFetch = VIDIFY_SERVERS.filter(s => ALLOWED_LANGUAGES.includes(s.language));
+  let languagesToFetch = ALLOWED_LANGUAGES;
+  if (excludeLatino) {
+    // Excluir "LATIN Dub" si viene de Cuevana
+    languagesToFetch = ALLOWED_LANGUAGES.filter(lang => lang !== 'LATIN Dub');
+    console.log('🚫 [VIDIFY-CRYPTO] Latino excluido - usando Cuevana');
+  }
+  
+  const serversToFetch = VIDIFY_SERVERS.filter(s => languagesToFetch.includes(s.language));
   
   // Agrupar por idioma
   const byLanguage: { [key: string]: typeof serversToFetch } = {};

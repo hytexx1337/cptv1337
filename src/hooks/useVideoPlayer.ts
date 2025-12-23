@@ -3661,7 +3661,7 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                 }
                 
                 player.src(sourceConfig);
-                
+                  
                 // Configurar VHS después de que se cargue el source
                 player.one('loadstart', () => {
                   if (player.tech_ && (player.tech_ as any).vhs) {

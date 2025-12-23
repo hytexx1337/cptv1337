@@ -212,32 +212,32 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                   }
                   
                   // Sinopsis del episodio y siguiente episodio
-                  if (seasonNum && episodeNum) {
-                    const seasonRes = await fetch(`/api/tv/${tmdbId}/season/${seasonNum}`);
-                    if (seasonRes.ok) {
-                      const seasonData = await seasonRes.json();
-                      const currentEp = seasonData.episodes?.find((ep: any) => ep.episode_number === episodeNum);
-                      setOverview(currentEp?.overview || tv.overview);
-                      
-                      const currentEpIndex = seasonData.episodes?.findIndex((ep: any) => ep.episode_number === episodeNum);
-                      if (currentEpIndex !== -1 && currentEpIndex < seasonData.episodes.length - 1) {
+              if (seasonNum && episodeNum) {
+                  const seasonRes = await fetch(`/api/tv/${tmdbId}/season/${seasonNum}`);
+                  if (seasonRes.ok) {
+                    const seasonData = await seasonRes.json();
+                    const currentEp = seasonData.episodes?.find((ep: any) => ep.episode_number === episodeNum);
+                    setOverview(currentEp?.overview || tv.overview);
+                    
+                    const currentEpIndex = seasonData.episodes?.findIndex((ep: any) => ep.episode_number === episodeNum);
+                    if (currentEpIndex !== -1 && currentEpIndex < seasonData.episodes.length - 1) {
                         setHasNextEpisode(true);
-                      } else {
-                        const nextSeason = tv.seasons?.find((s: any) => s.season_number === seasonNum + 1);
-                        setHasNextEpisode(!!nextSeason && (nextSeason.episode_count ?? 0) > 0);
-                      }
+                    } else {
+                      const nextSeason = tv.seasons?.find((s: any) => s.season_number === seasonNum + 1);
+                      setHasNextEpisode(!!nextSeason && (nextSeason.episode_count ?? 0) > 0);
                     }
                   }
-                  
+              }
+              
                   // External IDs (IMDB)
-                  const extRes = await fetch(`/api/tv/${tmdbId}/external_ids`);
-                  if (extRes.ok) {
-                    const ext = await extRes.json();
+              const extRes = await fetch(`/api/tv/${tmdbId}/external_ids`);
+              if (extRes.ok) {
+                const ext = await extRes.json();
                     setImdbId(ext.imdb_id || undefined);
                   }
                 } catch (err) {
                   logger.warn('[BACKGROUND] Error cargando metadata adicional:', err);
-                }
+              }
               })();
             }
           } else {
@@ -265,23 +265,23 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
               (async () => {
                 try {
                   // Logo
-                  const imagesRes = await fetch(`/api/movie/${tmdbId}/images`);
-                  if (imagesRes.ok) {
-                    const images: TMDBImages = await imagesRes.json();
-                    const originalLogo = images.logos?.find(l => l.iso_639_1 === 'en' || l.iso_639_1 === null) || images.logos?.[0];
-                    if (originalLogo?.file_path) {
-                      setLogoPath(getImageUrl(originalLogo.file_path, 'original'));
-                    }
+                const imagesRes = await fetch(`/api/movie/${tmdbId}/images`);
+                if (imagesRes.ok) {
+                  const images: TMDBImages = await imagesRes.json();
+                  const originalLogo = images.logos?.find(l => l.iso_639_1 === 'en' || l.iso_639_1 === null) || images.logos?.[0];
+                  if (originalLogo?.file_path) {
+                    setLogoPath(getImageUrl(originalLogo.file_path, 'original'));
                   }
+                }
                   
                   // External IDs solo si no tenemos IMDB
                   if (!movie.imdb_id) {
-                    const extRes = await fetch(`/api/movie/${tmdbId}/external_ids`);
-                    if (extRes.ok) {
-                      const ext = await extRes.json();
+                const extRes = await fetch(`/api/movie/${tmdbId}/external_ids`);
+                if (extRes.ok) {
+                  const ext = await extRes.json();
                       setImdbId(ext.imdb_id || undefined);
-                    }
-                  }
+                }
+              }
                 } catch (err) {
                   logger.warn('[BACKGROUND] Error cargando metadata adicional:', err);
                 }
@@ -316,29 +316,29 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
         
         // 🎯 PRIORIDAD 1: hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
         logger.log('⚡ [CLIENT-PLAYER] Obteniendo stream Original desde hls-browser-proxy (Vidlink)...');
-        try {
+          try {
           const proxyParams = new URLSearchParams({
-            type: normalizedType,
+              type: normalizedType,
             id: imdbIdLocal || tmdbId.toString(), // Preferir IMDB si existe
-          });
-          if (isTv && seasonNum && episodeNum) {
+            });
+            if (isTv && seasonNum && episodeNum) {
             proxyParams.set('season', seasonNum.toString());
             proxyParams.set('episode', episodeNum.toString());
-          }
-          
+            }
+            
           const proxyUrl = `/api/hls-browser-proxy/start?${proxyParams.toString()}`;
           logger.log(`🔗 [CLIENT-PLAYER] Llamando a hls-browser-proxy: ${proxyUrl}`);
-          
+            
           const proxyStartTime = Date.now();
           const proxyRes = await fetch(proxyUrl);
           const proxyTime = Date.now() - proxyStartTime;
           
           logger.log(`📡 [CLIENT-PLAYER] hls-browser-proxy respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms`);
-          
+            
           if (proxyRes.ok) {
             const proxyData = await proxyRes.json();
             logger.log('📦 [CLIENT-PLAYER] hls-browser-proxy datos:', proxyData);
-            
+              
             if (proxyData.playlistUrl) {
               setStreamUrl(proxyData.playlistUrl);
               logger.log(`✅ [CLIENT-PLAYER] Stream Original desde hls-browser-proxy (${proxyTime}ms)${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
@@ -353,14 +353,17 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
               setLoading(false);
               playerLogger.log(`🎬 [WATCH] Stream Original listo, iniciando reproducción...`);
               
-              // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
+              // 🔄 BACKGROUND: Obtener English Dub desde Vidify y Latino desde Cuevana
               (async () => {
                 try {
-                  logger.log('🌐 [CLIENT-PLAYER] [BACKGROUND] Obteniendo English Dub y Latino desde Vidify...');
+                  // Parallel fetch: Vidify (English Dub) + Cuevana (Latino)
+                  logger.log('🌐 [CLIENT-PLAYER] [BACKGROUND] Obteniendo English Dub (Vidify) y Latino (Cuevana) en paralelo...');
                   
+                  // 1. Vidify para English Dub SOLAMENTE (excluir Latino porque viene de Cuevana)
                   const vidifyParams = new URLSearchParams({
                     type: normalizedType,
                     id: tmdbId.toString(),
+                    excludeLatino: 'true', // No buscar Latino, viene de Cuevana
                   });
                   if (isTv && seasonNum && episodeNum) {
                     vidifyParams.set('season', seasonNum.toString());
@@ -368,17 +371,31 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                   }
                   
                   const vidifyUrl = `/api/streams/vidify-unified?${vidifyParams.toString()}`;
-                  const vidifyStartTime = Date.now();
-                  const vidifyRes = await fetch(vidifyUrl);
-                  const vidifyTime = Date.now() - vidifyStartTime;
                   
-                  logger.log(`📡 [CLIENT-PLAYER] [BACKGROUND] Vidify respuesta - status: ${vidifyRes.status}, tiempo: ${vidifyTime}ms`);
+                  // 2. Cuevana para Latino (usando TMDB ID)
+                  let cuevanaUrl = '';
+                  if (tmdbId) {
+                    if (isTv && seasonNum && episodeNum) {
+                      cuevanaUrl = `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
+                    } else {
+                      cuevanaUrl = `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
+                    }
+                    logger.log(`🎬 [CLIENT-PLAYER] [BACKGROUND] Cuevana URL: ${cuevanaUrl}`);
+                  } else {
+                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] No TMDB ID disponible para Cuevana');
+                  }
                   
-                  if (vidifyRes.ok) {
-                    const vidifyData = await vidifyRes.json();
+                  // Fetch en paralelo
+                  const [vidifyRes, cuevanaRes] = await Promise.allSettled([
+                    fetch(vidifyUrl),
+                    cuevanaUrl ? fetch(cuevanaUrl) : Promise.reject('No IMDB ID')
+                  ]);
+                  
+                  // Procesar English Dub (Vidify)
+                  if (vidifyRes.status === 'fulfilled' && vidifyRes.value.ok) {
+                    const vidifyData = await vidifyRes.value.json();
                     logger.log('📦 [CLIENT-PLAYER] [BACKGROUND] Vidify datos:', vidifyData);
                     
-                    // English Dub
                     if (vidifyData.englishDub?.streamUrl) {
                       const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
                       
@@ -386,23 +403,33 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                         logger.log(`🚫 [CLIENT-PLAYER] [BACKGROUND] English Dub omitido (país de habla inglesa: ${localOriginCountries.join(', ')})`);
                       } else {
                         setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                        logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] English Dub agregado (${vidifyTime}ms)`);
+                        logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] English Dub agregado desde Vidify`);
                       }
                     }
-                    
-                    // Latino
-                    if (vidifyData.latino?.streamUrl) {
-                      setCustomStreamUrl(vidifyData.latino.streamUrl);
-                      logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] Latino agregado (${vidifyTime}ms)`);
-                    }
                   } else {
-                    logger.warn(`⚠️ [CLIENT-PLAYER] [BACKGROUND] Vidify falló, solo tendremos Original`);
+                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Vidify falló para English Dub');
                   }
-                } catch (vidifyErr) {
-                  logger.error('❌ [CLIENT-PLAYER] [BACKGROUND] Error con Vidify:', vidifyErr);
-                }
-              })();
-              
+                  
+                  // Procesar Latino (Cuevana)
+                  if (cuevanaRes.status === 'fulfilled' && cuevanaRes.value.ok) {
+                    const cuevanaData = await cuevanaRes.value.json();
+                    logger.log('📦 [CLIENT-PLAYER] [BACKGROUND] Cuevana datos:', cuevanaData);
+                    
+                    // Adaptando formato de Cuevana al formato de la app
+                    if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
+                      setCustomStreamUrl(cuevanaData.video.url);
+                      logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
+                    } else {
+                      logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Cuevana no devolvió video válido');
+              }
+            } else {
+                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Cuevana falló para Latino');
+            }
+                } catch (err) {
+                  logger.error('❌ [CLIENT-PLAYER] [BACKGROUND] Error:', err);
+          }
+        })();
+
               return; // Éxito con hls-browser-proxy, salir
             }
           }
@@ -454,11 +481,33 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                 }
               }
               
-              // Latino
-              if (vidifyData.latino?.streamUrl) {
-                setCustomStreamUrl(vidifyData.latino.streamUrl);
-                logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Latino agregado`);
-                if (!hasAnyStream) hasAnyStream = true;
+              // Latino desde Cuevana (fetch paralelo en background)
+              if (tmdbId) {
+                (async () => {
+                  try {
+                    const cuevanaUrl = isTv && seasonNum && episodeNum
+                      ? `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`
+                      : `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
+                    
+                    logger.log(`🎬 [CLIENT-PLAYER] [FALLBACK] Obteniendo Latino desde Cuevana: ${cuevanaUrl}`);
+                    
+                    const cuevanaRes = await fetch(cuevanaUrl);
+                    if (cuevanaRes.ok) {
+                      const cuevanaData = await cuevanaRes.json();
+                      // Adaptando formato de Cuevana
+                      if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
+                        setCustomStreamUrl(cuevanaData.video.url);
+                        logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
+                      } else {
+                        logger.warn('⚠️ [CLIENT-PLAYER] [FALLBACK] Cuevana no devolvió video válido');
+                      }
+                    } else {
+                      logger.warn(`⚠️ [CLIENT-PLAYER] [FALLBACK] Cuevana falló: ${cuevanaRes.status}`);
+                    }
+                  } catch (cuevanaErr) {
+                    logger.error('❌ [CLIENT-PLAYER] [FALLBACK] Error con Cuevana:', cuevanaErr);
+                  }
+                })();
               }
               
               if (hasAnyStream) {
@@ -784,29 +833,29 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
       <div className="absolute inset-0">
         {/* Solo renderizar StreamingPlayer cuando NO está cargando */}
         {!loading ? (
-          <StreamingPlayer
+        <StreamingPlayer
             key={`watch-${isTv ? `tv-${tmdbId}-s${seasonNum}-e${episodeNum}` : `movie-${tmdbId}`}`}
-            goFileUrl={goFileUrl}
-            directStreamUrl={streamUrl || undefined}
-            customStreamUrl={customStreamUrl || undefined}
+          goFileUrl={goFileUrl}
+          directStreamUrl={streamUrl || undefined}
+          customStreamUrl={customStreamUrl || undefined}
             englishDubStreamUrl={englishDubStreamUrl || undefined}
-            externalSubtitles={externalSubtitles}
-            hasNextEpisode={hasNextEpisode}
-            movieMetadata={memoizedMovieMetadata}
-            tvMetadata={memoizedTvMetadata}
-            isModalPlayer={true}
-            onError={(e) => {
-              setError(e);
-            }}
-            onTimeUpdate={(time) => {
-              // Marcar que el video ha empezado cuando pasa 0.1s
-              if (time > 0.1 && !videoHasStarted) {
-                setVideoHasStarted(true);
-              }
-            }}
-            onEpisodeSelect={isTv ? handleEpisodeSelect : undefined}
+          externalSubtitles={externalSubtitles}
+          hasNextEpisode={hasNextEpisode}
+          movieMetadata={memoizedMovieMetadata}
+          tvMetadata={memoizedTvMetadata}
+          isModalPlayer={true}
+          onError={(e) => {
+            setError(e);
+          }}
+          onTimeUpdate={(time) => {
+            // Marcar que el video ha empezado cuando pasa 0.1s
+            if (time > 0.1 && !videoHasStarted) {
+              setVideoHasStarted(true);
+            }
+          }}
+          onEpisodeSelect={isTv ? handleEpisodeSelect : undefined}
             onClose={handleClose}
-          />
+        />
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-white text-xl">Cargando episodio...</div>

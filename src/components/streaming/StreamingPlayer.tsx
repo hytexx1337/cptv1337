@@ -368,11 +368,26 @@ import io, { Socket } from 'socket.io-client';
       return url;
     }
     
-    // Si es una URL externa, wrappearla con el proxy
+    // Si es una URL externa, wrappearla con el proxy correcto
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
-        const origin = new URL(url).origin + '/';
-        return `/api/cors-proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
+        // 🔍 Detectar si es un stream de Cuevana (o dominios conocidos de players)
+        const hostname = new URL(url).hostname.toLowerCase();
+        const isCuevanaPlayer = hostname.includes('embed69') || 
+                                hostname.includes('xupalace') || 
+                                hostname.includes('kinej') ||
+                                hostname.includes('player') ||
+                                url.includes('.m3u8'); // Cualquier M3U8 externo
+        
+        if (isCuevanaPlayer) {
+          // Usar vidify-proxy (más robusto para M3U8s)
+          logger.log(`🎬 [PROXY] Usando vidify-proxy para: ${hostname}`);
+          return `/api/vidify-proxy/m3u8?url=${encodeURIComponent(url)}`;
+        } else {
+          // Usar cors-proxy para otros casos
+          const origin = new URL(url).origin + '/';
+          return `/api/cors-proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
+        }
       } catch {
         return url;
       }
@@ -401,7 +416,7 @@ import io, { Socket } from 'socket.io-client';
     const result = selectedAudio === 'latino' && customStreamUrl 
       ? getProxiedCustomStreamUrl(customStreamUrl) as string 
       : selectedAudio === 'englishDub' && englishDubStreamUrl
-        ? englishDubStreamUrl
+        ? getProxiedCustomStreamUrl(englishDubStreamUrl) as string // También proxificar English Dub
         : (directStreamUrl || goFileUrl || streamUrlForPlayer || null); // Prioridad: Latino > English Dub > Original
     
     logger.log('🎬 [STREAM-URL-COMPUTED] URL calculada:', {

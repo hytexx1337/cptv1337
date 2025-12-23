@@ -96,7 +96,8 @@ export async function GET(req: NextRequest) {
   const tmdbId = searchParams.get('id');
   const season = searchParams.get('season') ? parseInt(searchParams.get('season')!) : undefined;
   const episode = searchParams.get('episode') ? parseInt(searchParams.get('episode')!) : undefined;
-  const includeOriginal = searchParams.get('includeOriginal') === 'true'; // Nuevo parámetro
+  const includeOriginal = searchParams.get('includeOriginal') === 'true'; // Incluir original
+  const excludeLatino = searchParams.get('excludeLatino') === 'true'; // Excluir Latino (viene de Cuevana)
 
   if (!type || !tmdbId) {
     return NextResponse.json({ error: 'Missing type or id' }, { status: 400 });
@@ -109,18 +110,28 @@ export async function GET(req: NextRequest) {
   const identifier = type === 'movie' ? `Movie ${tmdbId}` : `TV ${tmdbId} S${season}E${episode}`;
 
   try {
-    console.log(`\n🎬 [VIDIFY-UNIFIED] Obteniendo streams para: ${identifier}${includeOriginal ? ' (incluye original)' : ''}`);
+    console.log(`\n🎬 [VIDIFY-UNIFIED] Obteniendo streams para: ${identifier}${includeOriginal ? ' (incluye original)' : ''}${excludeLatino ? ' (excluye Latino)' : ''}`);
     
     const response: any = {
       original: null,
       englishDub: null,
-      latino: null
+      latino: excludeLatino ? null : null // Si se excluye, no se buscará
     };
     
     // 🔍 PASO 1: Determinar qué idiomas buscar
-    const languagesToFetch = includeOriginal 
-      ? ['original Lang', 'English Dub', 'LATIN Dub'] // Fallback de Vidlink: buscar TODO
-      : ['English Dub', 'LATIN Dub']; // Normal: solo audios alternativos
+    let languagesToFetch: string[] = [];
+    
+    if (includeOriginal) {
+      // Fallback de Vidlink: buscar TODO (excepto Latino si se excluye)
+      languagesToFetch = excludeLatino 
+        ? ['original Lang', 'English Dub']
+        : ['original Lang', 'English Dub', 'LATIN Dub'];
+    } else {
+      // Normal: solo audios alternativos (excepto Latino si se excluye)
+      languagesToFetch = excludeLatino 
+        ? ['English Dub']
+        : ['English Dub', 'LATIN Dub'];
+    }
     
     console.log(`🌐 [VIDIFY-UNIFIED] Consultando Vidify para: ${languagesToFetch.join(', ')}...`);
     
@@ -159,7 +170,8 @@ export async function GET(req: NextRequest) {
         tmdbId,
         type,
         season,
-        episode
+        episode,
+        excludeLatino
       );
       
       // 🚫 FILTRAR: NO incluir "original Lang" a menos que se solicite explícitamente
@@ -235,7 +247,8 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    if (latinoStreams.length > 0) {
+    // Latino (solo si NO se excluye)
+    if (!excludeLatino && latinoStreams.length > 0) {
       const best = latinoStreams[0];
       // Proxear URL con metadata para invalidación automática
       const metadata = `&type=${type}&id=${tmdbId}${season ? `&season=${season}&episode=${episode}` : ''}&language=${encodeURIComponent('LATIN Dub')}`;
@@ -252,6 +265,8 @@ export async function GET(req: NextRequest) {
         season,
         episode
       };
+    } else if (excludeLatino) {
+      console.log('🚫 [VIDIFY-UNIFIED] Latino excluido (viene de Cuevana)');
     }
 
     // Resumen final
