@@ -1,0 +1,17 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/_v7/061a983e56dff147e77ee132efc97668d034a09467c6f1d73e57c0e7c8233129515998530bb4de53ca2530be201fbd887fbcc6d7f9298e20d028f6b034c162c8dacdaa9d70c1731c65d78a3b401d6c681581b66111a2f77099f5cdd1dec2aa8cd70aa61e7dd88cf689f932bd933cdf0e9bca4c47ca5fd7553b17f3043522d435/master.m3u8?headers={%22referer%22:%22https://megacloud.blog/%22,%22origin%22:%22https://megacloud.blog%22}&host=https://haildrop77.pro",
+  "sourceUrl": "https://vidlink.pro/tv/12971/1/5?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "12971",
+  "season": "1",
+  "episode": "5",
+  "subtitles": [
+    {
+      "url": "https://mgstatics.xyz/subtitle/5ec02d1714875dd9218f4a5b56824f8e/eng-5.vtt",
+      "language": "eng",
+      "label": "English"
+    }
+  ],
+  "timestamp": 1766409636864,
+  "expiresAt": 1774185636864
+}

@@ -1,0 +1,242 @@
+/* =====================================================
+   PLYR - 2 FILAS CON CONTENEDORES JS
+   ===================================================== */
+
+.plyr-container {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.plyr {
+  width: 100% !important;
+  height: 100% !important;
+  --plyr-color-main: #e50914;
+  --plyr-video-background: #000;
+}
+
+.plyr video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* =====================================================
+   CONTROLES - FLEX WRAP PARA 2 FILAS
+   ===================================================== */
+.plyr__controls {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  padding: 12px 20px 16px 20px !important;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 60%, transparent 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  gap: 12px 0 !important;
+  
+  /* SIEMPRE VISIBLE */
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+}
+
+.plyr--hide-controls .plyr__controls,
+.plyr--playing .plyr__controls {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* =====================================================
+   FILA 1: PROGRESS BAR - 100% WIDTH
+   ===================================================== */
+.plyr__progress {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+
+/* Tiempos */
+.plyr__time {
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  flex-shrink: 0 !important;
+}
+
+.plyr__time--current {
+  min-width: 50px !important;
+}
+
+.plyr__time--duration {
+  min-width: 50px !important;
+}
+
+.plyr__time + .plyr__time::before {
+  display: none !important;
+}
+
+/* Barra de progreso */
+.plyr__progress__container {
+  flex: 1 !important;
+}
+
+.plyr__progress input[type="range"] {
+  height: 5px !important;
+  width: 100% !important;
+}
+
+.plyr__progress input[type="range"]::-webkit-slider-thumb {
+  width: 15px !important;
+  height: 15px !important;
+  background: #e50914 !important;
+}
+
+.plyr__progress input[type="range"]::-webkit-slider-runnable-track {
+  background: rgba(255, 255, 255, 0.3) !important;
+  height: 5px !important;
+}
+
+/* =====================================================
+   FILA 2: CONTENEDOR CREADO POR JS
+   ===================================================== */
+.plyr-row2-container {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+}
+
+.plyr-left-group,
+.plyr-center-group,
+.plyr-right-group {
+  align-items: center !important;
+}
+
+.plyr-title-display {
+  text-align: center !important;
+  padding: 0 20px !important;
+}
+
+/* =====================================================
+   VOLUME HOVER
+   ===================================================== */
+.plyr__volume {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.plyr__volume input[type="range"] {
+  width: 0 !important;
+  max-width: 0 !important;
+  opacity: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+.plyr__volume:hover input[type="range"] {
+  width: 80px !important;
+  max-width: 80px !important;
+  opacity: 1 !important;
+  margin-left: 8px !important;
+}
+
+/* =====================================================
+   ESTILO DE BOTONES
+   ===================================================== */
+.plyr__controls button {
+  color: #fff !important;
+  background: transparent !important;
+  padding: 10px !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.plyr__controls button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.plyr__controls button svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: currentColor !important;
+}
+
+/* Botón grande de play */
+.plyr__control--overlaid {
+  background: rgba(229, 9, 20, 0.9) !important;
+  padding: 20px !important;
+}
+
+.plyr__control--overlaid:hover {
+  background: rgba(229, 9, 20, 1) !important;
+}
+
+/* =====================================================
+   OCULTAR NO DESEADOS
+   ===================================================== */
+.plyr__control[data-plyr="restart"],
+.plyr__time--separator {
+  display: none !important;
+}
+
+/* =====================================================
+   MENUS Y SUBTÍTULOS
+   ===================================================== */
+.plyr__menu__container {
+  background: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 8px !important;
+}
+
+.plyr__captions {
+  bottom: 100px !important;
+  font-size: 20px !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* =====================================================
+   FULLSCREEN
+   ===================================================== */
+.plyr--fullscreen .plyr__controls {
+  padding: 16px 30px 20px 30px !important;
+}
+
+.plyr--fullscreen .plyr__captions {
+  bottom: 120px !important;
+  font-size: 24px !important;
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 768px) {
+  .plyr__controls {
+    padding: 10px 12px 14px 12px !important;
+  }
+  
+  .plyr-title-display {
+    font-size: 13px !important;
+    padding: 0 10px !important;
+  }
+  
+  .plyr__controls button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .plyr__time {
+    font-size: 12px !important;
+    min-width: 40px !important;
+  }
+  
+  .plyr-left-group,
+  .plyr-right-group {
+    gap: 2px !important;
+  }
+}

@@ -1,0 +1,1880 @@
+@import "tailwindcss";
+
+/* ========================================
+   FUENTE GLOBAL - Poppins (excepto Video.js)
+   ======================================== */
+body,
+body *:not(.video-js):not(.video-js *) {
+  font-family: var(--font-poppins), 'Poppins', system-ui, -apple-system, sans-serif !important;
+}
+
+/* ========================================
+   FIX: Ocultar scrollbar cuando el reproductor modal está activo
+   ======================================== */
+
+/* Detectar cuando hay un player modal activo (página /watch) y ocultar scrollbar del body/html */
+body:has(.fixed.inset-0.bg-black[class*="z-[100]"]),
+html:has(.fixed.inset-0.bg-black[class*="z-[100]"]) {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body:has(.fixed.inset-0.bg-black[class*="z-[100]"])::-webkit-scrollbar,
+html:has(.fixed.inset-0.bg-black[class*="z-[100]"])::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* También ocultar en el reproductor mismo */
+.video-js,
+.video-js *,
+#movie-player-container,
+#movie-player-container * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.video-js::-webkit-scrollbar,
+.video-js *::-webkit-scrollbar,
+#movie-player-container::-webkit-scrollbar,
+#movie-player-container *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Ocultar scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ========================================
+   ANTI-GRADIENT CSS - Targeted approach
+   ======================================== */
+
+/* Remove gradients from Video.js control bar specifically */
+.video-js .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove gradients from big play button */
+.video-js .vjs-big-play-button {
+  background: rgba(0,0,0,0.8) !important;
+  background-image: none !important;
+}
+
+/* Remove gradients from poster */
+.video-js .vjs-poster {
+  background-color: #000 !important;
+  background-image: none !important;
+}
+
+/* Ensure video tech element has black background + optimizations */
+.video-js .vjs-tech {
+  background: #000 !important;
+  /* Optimizaciones críticas para evitar frame drops */
+  will-change: transform, opacity;
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden;
+  perspective: 1000px;
+  /* Evitar interferencia de overlays */
+  isolation: isolate;
+}
+
+/* Custom loading styles */
+.video-js .vjs-loading-spinner {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.video-js.vjs-waiting .vjs-loading-spinner,
+.video-js.vjs-seeking .vjs-loading-spinner {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Custom poster for loading state */
+.video-js .vjs-poster {
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMDAwIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZmlsbD0iI2ZmZiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2Ij5DYXJnYW5kby4uLjwvdGV4dD4KPHN2ZyB4PSI4NSIgeT0iMTIwIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtZGFzaGFycmF5PSIxNSA1IiBzdHJva2UtZGFzaG9mZnNldD0iMCI+CjxhbmltYXRlVHJhbnNmb3JtIGF0dHJpYnV0ZU5hbWU9InRyYW5zZm9ybSIgdHlwZT0icm90YXRlIiB2YWx1ZXM9IjAgMTIgMTI7MzYwIDEyIDEyIiBkdXI9IjJzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPgo8L2NpcmNsZT4KPC9zdmc+Cjwvc3ZnPg==') !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 200px 200px !important;
+  background-color: #000 !important;
+}
+
+/* ESSENTIAL Video.js BASE STYLES - Only what we need */
+.video-js {
+  position: relative;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: normal;
+  font-style: normal;
+  font-family: Arial, Helvetica, sans-serif;
+  word-break: initial;
+  background: #000 !important;
+  background-image: none !important;
+}
+
+/* Aplicar estilos del tema forest inmediatamente */
+.video-js.vjs-theme-forest {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* CONTROLES VIDEO.JS - CONFIGURACIÓN BALANCEADA - Permitir auto-hide nativo */
+.video-js .vjs-control-bar {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%) !important;
+  backdrop-filter: none !important;
+  z-index: 1000 !important;
+  /* Removidas las reglas que forzaban visibilidad para permitir auto-hide nativo */
+}
+
+/* Mantener controles visibles en estados específicos */
+/* Controles básicos - permitir auto-hide nativo de Video.js */
+.video-js.vjs-paused .vjs-control-bar {
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Transiciones suaves para auto-hide */
+.video-js .vjs-control-bar {
+  transition: visibility 0.3s, opacity 0.3s;
+}
+
+/* Controles individuales - SOLO LOS NECESARIOS */
+/* CAMBIADO display: block a display: flex para permitir alineación correcta */
+.video-js .vjs-control-bar .vjs-play-control,
+.video-js .vjs-control-bar .vjs-time-control,
+.video-js .vjs-control-bar .vjs-progress-control,
+.video-js .vjs-control-bar .vjs-volume-panel,
+.video-js .vjs-control-bar .vjs-fullscreen-control,
+.video-js .vjs-control-bar .vjs-subtitles-button,
+.video-js .vjs-control-bar .vjs-captions-button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* OCULTAR BOTONES NO DESEADOS */
+.video-js .vjs-control-bar .vjs-live-control,
+.video-js .vjs-control-bar .vjs-chapters-button,
+.video-js .vjs-control-bar .vjs-descriptions-button,
+.video-js .vjs-control-bar .vjs-audio-button,
+.video-js .vjs-control-bar .vjs-picture-in-picture-control,
+.video-js .vjs-control-bar .vjs-playback-rate-menu-button,
+.video-js .vjs-control-bar .vjs-skip-backward,
+.video-js .vjs-control-bar .vjs-skip-forward,
+.video-js .vjs-control-bar .vjs-seek-to-live-control,
+.video-js .vjs-control-bar .vjs-skip-backward-undefined,
+.video-js .vjs-control-bar .vjs-skip-forward-undefined,
+.video-js .vjs-control-bar .vjs-custom-control-spacer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ocultar botones específicos que aparecen como invisibles pero siguen ocupando espacio */
+.vjs-skip-backward-undefined,
+.vjs-skip-forward-undefined,
+button.vjs-skip-backward-undefined,
+button.vjs-skip-forward-undefined,
+.vjs-chapters-button,
+button.vjs-chapters-button,
+.video-js .vjs-chapters-button,
+div.vjs-chapters-button,
+.vjs-control-bar .vjs-chapters-button,
+.video-js .vjs-control-bar .vjs-chapters-button,
+.vjs-chapters-button.vjs-menu-button,
+.vjs-chapters-button.vjs-menu-button-popup,
+.vjs-chapters-button.vjs-control,
+.vjs-chapters-button.vjs-button,
+.vjs-chapters-button.vjs-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  border: none !important;
+  outline: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
+
+.video-js:-moz-full-screen {
+  position: absolute;
+}
+
+.video-js:-webkit-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.video-js[tabindex="-1"] {
+  outline: none;
+}
+
+.video-js *,
+.video-js *:before,
+.video-js *:after {
+  box-sizing: inherit;
+  background-image: none !important;
+}
+
+.video-js ul {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  list-style-position: outside;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.video-js.vjs-fluid {
+  padding-top: 56.25%;
+}
+
+.video-js .vjs-tech {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000 !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-poster {
+  display: inline-block;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: contain;
+  background-color: #000 !important;
+  background-image: none !important;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+}
+
+.video-js.vjs-has-started .vjs-poster {
+  display: none;
+}
+
+.video-js .vjs-loading-spinner {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -25px 0 0 -25px;
+  opacity: 0.85;
+  text-align: left;
+  border: 6px solid rgba(43, 51, 63, 0.7);
+  box-sizing: border-box;
+  background-clip: padding-box;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  visibility: hidden;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.vjs-seeking .vjs-loading-spinner,
+.vjs-waiting .vjs-loading-spinner {
+  display: block;
+  visibility: visible;
+}
+
+.video-js .vjs-big-play-button {
+  font-size: 3em;
+  line-height: 1.5em;
+  height: 1.5em;
+  width: 3em;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  padding: 0;
+  cursor: pointer;
+  opacity: 1;
+  border: 0.06666em solid #fff;
+  background-color: rgba(0,0,0,0.8) !important;
+  background-image: none !important;
+  border-radius: 0.3em;
+  transition: all 0.4s;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.vjs-big-play-centered .vjs-big-play-button {
+  top: 50%;
+  left: 50%;
+  margin-top: 0;
+  margin-left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.video-js:hover .vjs-big-play-button,
+.video-js .vjs-big-play-button:focus {
+  border-color: #fff;
+  background-color: rgba(0,0,0,0.9) !important;
+  background-image: none !important;
+}
+
+.vjs-controls-disabled .vjs-big-play-button,
+.vjs-has-started .vjs-big-play-button,
+.vjs-using-native-controls .vjs-big-play-button,
+.vjs-error .vjs-big-play-button {
+  display: none;
+}
+
+.vjs-has-started.vjs-paused.vjs-show-big-play-button-on-pause .vjs-big-play-button {
+  display: block;
+}
+
+.video-js .vjs-control-bar {
+  direction: ltr;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3.0em;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  z-index: 2000 !important;
+  /* Removidas display: flex, visibility: visible y opacity: 1 para permitir auto-hide */
+}
+
+.vjs-audio-only-mode .vjs-control-bar {
+  display: block;
+  opacity: 1;
+  position: relative;
+  background-color: rgba(0,0,0,0.8) !important;
+  background-image: none !important;
+}
+
+/* CSS limpio - regla vacía eliminada */
+
+.vjs-controls-disabled .vjs-control-bar,
+.vjs-using-native-controls .vjs-control-bar,
+.vjs-error .vjs-control-bar {
+  display: none;
+}
+
+.vjs-audio-only-mode.vjs-controls-disabled .vjs-control-bar,
+.vjs-audio-only-mode.vjs-using-native-controls .vjs-control-bar,
+.vjs-audio-only-mode.vjs-error .vjs-control-bar {
+  display: block;
+}
+
+/* COMENTADO - causa problemas de alineación, manejado en videojs-custom.css */
+/*
+.video-js .vjs-control {
+  position: relative;
+  text-align: center;
+  margin: 0;
+  padding: 0 0.5em;
+  height: 100%;
+  width: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  background-image: none !important;
+}
+*/
+
+.video-js .vjs-button > .vjs-icon-placeholder:before {
+  font-family: VideoJS;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.video-js .vjs-button:hover,
+.video-js .vjs-button:focus {
+  background: rgba(255,255,255,0.1) !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-progress-control {
+  cursor: pointer;
+  flex: auto;
+  display: flex;
+  align-items: center;
+  min-width: 4em;
+  touch-action: none;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-progress-holder {
+  flex: auto;
+  transition: all 0.2s;
+  height: 0.3em;
+  background: rgba(255,255,255,0.2) !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-play-progress,
+.video-js .vjs-load-progress {
+  position: absolute;
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  left: 0;
+  top: 0;
+  background: #fff !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-load-progress {
+  background: rgba(255,255,255,0.4) !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-time-control {
+  flex: none;
+  font-size: 1.1em;
+  line-height: 2;
+  min-width: 2em;
+  width: auto;
+  padding-left: 1em;
+  padding-right: 1em;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.video-js .vjs-current-time,
+.vjs-no-flex .vjs-current-time {
+  display: block;
+}
+
+.video-js .vjs-duration,
+.vjs-no-flex .vjs-duration {
+  display: block;
+}
+
+.vjs-time-divider {
+  display: block;
+  line-height: 2em;
+}
+
+/* COMENTADO - causa problemas de alineación, manejado en videojs-custom.css */
+/*
+.video-js .vjs-mute-control {
+  cursor: pointer;
+  flex: none;
+  background: transparent !important;
+  background-image: none !important;
+}
+*/
+
+/* COMENTADO - Conflicto con reglas de videojs-custom.css
+.video-js .vjs-volume-control {
+  cursor: pointer;
+  margin-right: 1em;
+  display: flex;
+  background: transparent !important;
+  background-image: none !important;
+}
+*/
+
+.video-js .vjs-volume-control.vjs-volume-control-vertical {
+  width: 3em;
+  left: -3.5em;
+  transition: left 0.1s;
+}
+
+.video-js .vjs-volume-control .vjs-volume-bar {
+  margin: 1.35em 0.45em;
+  background: rgba(255,255,255,0.2) !important;
+  background-image: none !important;
+}
+
+.vjs-volume-bar.vjs-slider-horizontal {
+  width: 5em;
+  height: 0.3em;
+}
+
+.vjs-volume-bar.vjs-slider-vertical {
+  width: 0.3em;
+  height: 5em;
+  margin: 1.35em auto;
+}
+
+.video-js .vjs-volume-level {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: #fff !important;
+  background-image: none !important;
+}
+
+.vjs-slider-horizontal .vjs-volume-level {
+  height: 100%;
+}
+
+.vjs-slider-vertical .vjs-volume-level {
+  width: 100%;
+}
+
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical:hover,
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical:active,
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical.vjs-slider-active {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* COMENTADO - causa hover permanente en volumen, manejado en videojs-custom.css */
+/*
+.video-js .vjs-volume-panel .vjs-mute-control:hover,
+.video-js .vjs-volume-panel .vjs-mute-control:focus,
+.video-js .vjs-volume-panel:active .vjs-mute-control,
+.video-js .vjs-volume-panel.vjs-slider-active .vjs-mute-control {
+  background: rgba(255,255,255,0.1) !important;
+  background-image: none !important;
+}
+*/
+
+/* COMENTADO - causa problemas de alineación, manejado en videojs-custom.css */
+/*
+.video-js .vjs-fullscreen-control {
+  cursor: pointer;
+  flex: none;
+  background: transparent !important;
+  background-image: none !important;
+}
+*/
+
+@media screen and (max-width: 50em) {
+  .vjs-volume-control.vjs-volume-control-vertical {
+    display: none;
+  }
+  
+  .video-js .vjs-volume-panel .vjs-volume-control {
+    display: none;
+  }
+  
+  .video-js .vjs-volume-panel {
+    width: auto;
+  }
+}
+
+/* Custom Video.js Theme - Modern Dark */
+.video-js.vjs-theme-forest {
+  background-color: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Force video player container to fill completely */
+.video-js.vjs-theme-forest {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #000 !important;
+}
+
+/* Force video tech element to fill completely, but let video maintain aspect ratio */
+.video-js.vjs-theme-forest .vjs-tech {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  background-image: none !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
+  backdrop-filter: none;
+  border: none;
+  height: 60px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* COMENTADO - fuerza 32px y scale, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-button {
+  color: #fff;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 0 2px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+}
+
+.video-js.vjs-theme-forest .vjs-button:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
+}
+*/
+
+/* COMENTADO - causa desalineación con otros botones */
+/*
+.video-js.vjs-theme-forest .vjs-play-control {
+  font-size: 16px;
+  margin-right: 4px;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  vertical-align: top !important;
+}
+
+.video-js.vjs-theme-forest .vjs-play-control .vjs-icon-placeholder {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  vertical-align: baseline !important;
+}
+
+.video-js.vjs-theme-forest .vjs-play-control .vjs-icon-placeholder:before {
+  line-height: 1 !important;
+  vertical-align: baseline !important;
+}
+*/
+
+/* COMENTADO - se maneja en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-volume-panel {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 4px !important;
+  height: 32px !important;
+  position: relative !important;
+}
+*/
+
+/* Estilos específicos para la barra de volumen vertical */
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 3px !important;
+  height: 70px !important;
+  width: 6px !important;
+  margin: 0 auto !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-level {
+  background: #ffffff !important;
+  border-radius: 3px !important;
+  width: 100% !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  transition: height 0.1s ease !important;
+  min-height: 2px !important;
+}
+
+/* Remover el indicador personalizado y usar el slider nativo de Video.js */
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar .vjs-slider {
+  background: transparent !important;
+  position: relative !important;
+}
+
+/* Ocultar cualquier elemento nativo del slider que pueda aparecer */
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar .vjs-slider:before,
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar .vjs-slider:after {
+  display: none !important;
+}
+
+/* Agregar un handle visible al slider vertical */
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar {
+  position: relative !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control .vjs-volume-bar:after {
+  content: '' !important;
+  position: absolute !important;
+  width: 12px !important;
+  height: 12px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: calc(var(--volume-percentage, 50) * 1% - 6px) !important;
+  z-index: 15 !important;
+  pointer-events: none !important;
+  transition: bottom 0.1s ease !important;
+}
+
+/* Mejorar el botón de mute en el volume panel vertical */
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-mute-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 2px !important;
+  height: 32px !important;
+  width: 32px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-mute-control:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+  transform: scale(1.05) !important;
+}
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical {
+  position: relative !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical .vjs-volume-control {
+  position: absolute !important;
+  bottom: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  border-radius: 8px !important;
+  padding: 12px 6px !important;
+  margin-bottom: 10px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical:hover .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-volume-panel.vjs-volume-panel-vertical.vjs-slider-active .vjs-volume-control {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* COMENTADO - manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-progress-control {
+  flex: 1;
+  height: 6px;
+  margin: 0 12px;
+  display: flex;
+  align-items: center;
+}
+*/
+
+.video-js.vjs-theme-forest .vjs-progress-holder {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  width: 100%;
+  position: relative;
+}
+
+.video-js.vjs-theme-forest .vjs-play-progress {
+  background: linear-gradient(90deg, #e50914, #b20710);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.5);
+  height: 100%;
+}
+
+.video-js.vjs-theme-forest .vjs-load-progress {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+  height: 100%;
+}
+
+.video-js.vjs-theme-forest .vjs-time-control {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 2px;
+  margin: 0 1px;
+}
+
+/* Show both current time and duration on the left side */
+.video-js.vjs-theme-forest .vjs-current-time {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-time-divider {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  margin: 0 1px;
+}
+
+.video-js.vjs-theme-forest .vjs-duration {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+/* Hide the remaining time display on the right side */
+.video-js.vjs-theme-forest .vjs-remaining-time {
+  display: none !important;
+}
+
+.video-js.vjs-theme-forest .vjs-current-time {
+  margin-right: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-time-divider {
+  margin: 0 1px;
+}
+
+.video-js.vjs-theme-forest .vjs-duration {
+  margin-left: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-custom-duration {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  margin: 0 2px;
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+/* COMENTADO - manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-fullscreen-control {
+  margin-left: 4px;
+}
+*/
+
+.video-js.vjs-theme-forest .vjs-picture-in-picture-control {
+  margin-right: 2px;
+}
+
+/* COMENTADO - height 100% causa problemas, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-volume-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 2px !important;
+  height: 100% !important;
+}
+*/
+
+/* COMENTADO - fuerza 32px y scale, causa desalineación, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-mute-control {
+  margin-right: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 32px !important;
+  width: 32px !important;
+  padding: 0 !important;
+}
+
+.video-js.vjs-theme-forest .vjs-mute-control:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-radius: 6px !important;
+  transform: scale(1.05) !important;
+  transition: all 0.2s ease !important;
+}
+*/
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .video-js.vjs-theme-forest .vjs-control-bar {
+    height: 50px;
+    padding: 0 12px;
+  }
+  
+  /* COMENTADO - manejado en videojs-custom.css */
+  /*
+  .video-js.vjs-theme-forest .vjs-button {
+    margin: 0 1px;
+    height: 28px;
+    min-width: 28px;
+    padding: 4px;
+  }
+  */
+  
+  /* COMENTADO - manejado en videojs-custom.css */
+  /*
+  .video-js.vjs-theme-forest .vjs-progress-control {
+    margin: 0 8px;
+  }
+  */
+  
+  .video-js.vjs-theme-forest .vjs-time-control {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 1px;
+  }
+  
+  .video-js.vjs-theme-forest .vjs-custom-duration {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 2px;
+  }
+}
+
+/* Loading state */
+.video-js.vjs-theme-forest .vjs-loading-spinner {
+  border-color: #e50914 transparent transparent transparent;
+}
+
+/* Big play button - Force centered positioning from initialization */
+.video-js.vjs-theme-forest .vjs-big-play-button {
+  background: rgba(0,0,0,0.7);
+  border: 2px solid #e50914;
+  border-radius: 50%;
+  color: #e50914;
+  font-size: 2.5em;
+  height: 80px;
+  width: 80px;
+  line-height: 76px;
+  /* Force centered positioning immediately */
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  transition: all 0.3s ease;
+  /* Hide when video is not ready */
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Show big play button only when video is ready and not playing */
+.video-js.vjs-theme-forest.vjs-paused .vjs-big-play-button,
+.video-js.vjs-theme-forest.vjs-ended .vjs-big-play-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-js.vjs-theme-forest .vjs-big-play-button:hover {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: #b20710;
+  color: #b20710;
+  transform: scale(1.1);
+}
+
+/* Error display */
+.video-js.vjs-theme-forest .vjs-error-display {
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+}
+
+.video-js.vjs-theme-forest .vjs-error-display .vjs-modal-dialog-content {
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Menu styling */
+.video-js.vjs-theme-forest .vjs-menu {
+  background: rgba(0,0,0,0.9);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item {
+  color: #fff;
+  padding: 8px 16px;
+  transition: background 0.2s ease;
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item:hover {
+  background: rgba(229, 9, 20, 0.2);
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item.vjs-selected {
+  background: rgba(229, 9, 20, 0.3);
+  color: #e50914;
+}
+
+/* 1) Asegurar un contenedor relativo para que z-index funcione */
+.video-js.vjs-theme-forest {
+  position: relative; /* clave para stacking correcto */
+}
+
+/* 2) Traer los subtítulos al frente y que no bloqueen clicks */
+.video-js.vjs-theme-forest .vjs-text-track-display,
+.video-js.vjs-theme-forest .vjs-text-track-display .vjs-text-track-cue {
+  position: absolute !important;        /* fuerza a estar sobre el video */
+  left: 0; right: 0; top: 0; bottom: 0; /* ocupa todo el player */
+  z-index: 2000;                        /* > control bar (1000) y overlays (500) */
+  pointer-events: none;                 /* no interfiere con controles */
+}
+
+/* 3) Mantener la barra de controles clickeable */
+.video-js.vjs-theme-forest .vjs-control-bar {
+  z-index: 1000;
+}
+
+/* 4) Estética de los subtítulos */
+.video-js.vjs-theme-forest .vjs-text-track-display {
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,.8);
+}
+
+/* 5) Evitar que el fondo opaco tape algo */
+.video-js.vjs-theme-forest .vjs-text-track-cue {
+  background: transparent !important;
+}
+
+/* 6) Fullscreen: repetir reglas para asegurar prioridad */
+.video-js.vjs-theme-forest.vjs-fullscreen .vjs-text-track-display,
+.video-js.vjs-theme-forest.vjs-fullscreen .vjs-text-track-display .vjs-text-track-cue {
+  z-index: 2000;
+}
+
+/* Fullscreen overlay fixes */
+.video-js.vjs-fullscreen ~ div[class*="fixed"],
+.video-js.vjs-fullscreen ~ div[class*="absolute"] {
+  position: absolute !important;
+  z-index: 2100 !important;
+}
+
+/* Ensure overlays work in fullscreen */
+.video-js.vjs-fullscreen {
+  z-index: 1000;
+}
+
+.video-js.vjs-fullscreen * {
+  z-index: inherit;
+}
+
+/* Prime Video style skip controls */
+.prime-skip-zone {
+  position: absolute;
+  top: 35%;
+  width: 25%;
+  height: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  z-index: 500;
+  pointer-events: none; /* Disable pointer events by default */
+}
+
+.prime-skip-zone.prime-skip-visible,
+.video-js.vjs-paused .prime-skip-zone {
+  opacity: 1;
+  pointer-events: auto; /* Enable pointer events only when visible */
+}
+
+/* En pantalla completa, ocultar controles cuando el usuario está inactivo */
+.video-js.vjs-fullscreen.vjs-user-inactive .prime-skip-zone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Mantener controles visibles en pantalla completa solo cuando el usuario está activo */
+.video-js.vjs-fullscreen.vjs-user-active .prime-skip-zone.prime-skip-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.prime-skip-zone.prime-skip-clicked {
+  transform: scale(1.1);
+  transition: transform 0.1s ease;
+}
+
+.prime-skip-zone.prime-skip-backward {
+  left: 10%;
+}
+
+.prime-skip-zone.prime-skip-forward {
+  right: 10%;
+}
+
+.prime-skip-icon {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Play/Pause button in center */
+.prime-play-pause-zone {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  z-index: 500;
+  pointer-events: none; /* Disable pointer events by default */
+}
+
+.prime-play-pause-zone.prime-skip-visible,
+.video-js.vjs-paused .prime-play-pause-zone {
+  opacity: 1;
+  pointer-events: auto; /* Enable pointer events only when visible */
+}
+
+/* En pantalla completa, ocultar controles cuando el usuario está inactivo */
+.video-js.vjs-fullscreen.vjs-user-inactive .prime-play-pause-zone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Mantener controles visibles en pantalla completa solo cuando el usuario está activo */
+.video-js.vjs-fullscreen.vjs-user-active .prime-play-pause-zone.prime-skip-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.prime-play-pause-zone.prime-skip-clicked {
+  transform: translate(-50%, -50%) scale(1.1);
+  transition: transform 0.1s ease;
+}
+
+.prime-play-pause-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mejorar estilos del slider de volumen */
+.video-js.vjs-theme-forest .vjs-volume-bar {
+  background: rgba(255,255,255,0.2) !important;
+  border-radius: 2px !important;
+  height: 4px !important;
+  width: 60px !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-level {
+  background: #fff !important;
+  border-radius: 2px !important;
+  height: 100% !important;
+}
+
+/* COMENTADO - Conflicto con reglas de videojs-custom.css para ocultar barra horizontal
+.video-js.vjs-theme-forest .vjs-volume-panel:hover .vjs-volume-control {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-panel .vjs-volume-control {
+  transition: all 0.2s ease !important;
+}
+*/
+
+.vjs-volume-bar.vjs-slider-horizontal {
+  width: 5em;
+  height: 0.3em;
+}
+
+.vjs-volume-bar.vjs-slider-vertical {
+  width: 0.3em;
+  height: 5em;
+  margin: 1.35em auto;
+}
+
+.video-js .vjs-volume-level {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: #fff !important;
+  background-image: none !important;
+}
+
+.vjs-slider-horizontal .vjs-volume-level {
+  height: 100%;
+}
+
+.vjs-slider-vertical .vjs-volume-level {
+  width: 100%;
+}
+
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical:hover,
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical:active,
+.video-js .vjs-volume-panel.vjs-volume-panel-vertical.vjs-slider-active {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* COMENTADO - causa hover permanente en volumen, manejado en videojs-custom.css */
+/*
+.video-js .vjs-volume-panel .vjs-mute-control:hover,
+.video-js .vjs-volume-panel .vjs-mute-control:focus,
+.video-js .vjs-volume-panel:active .vjs-mute-control,
+.video-js .vjs-volume-panel.vjs-slider-active .vjs-mute-control {
+  background: rgba(255,255,255,0.1) !important;
+  background-image: none !important;
+}
+*/
+
+/* COMENTADO - causa problemas de alineación, manejado en videojs-custom.css */
+/*
+.video-js .vjs-fullscreen-control {
+  cursor: pointer;
+  flex: none;
+  background: transparent !important;
+  background-image: none !important;
+}
+*/
+
+@media screen and (max-width: 50em) {
+  .vjs-volume-control.vjs-volume-control-vertical {
+    display: none;
+  }
+  
+  .video-js .vjs-volume-panel .vjs-volume-control {
+    display: none;
+  }
+  
+  .video-js .vjs-volume-panel {
+    width: auto;
+  }
+}
+
+/* Custom Video.js Theme - Modern Dark */
+.video-js.vjs-theme-forest {
+  background-color: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Force video player container to fill completely */
+.video-js.vjs-theme-forest {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #000 !important;
+}
+
+/* Force video tech element to fill completely, but let video maintain aspect ratio */
+.video-js.vjs-theme-forest .vjs-tech {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  background-image: none !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
+  backdrop-filter: none;
+  border: none;
+  height: 60px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* COMENTADO - fuerza 32px y scale, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-button {
+  color: #fff;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 0 2px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+}
+
+.video-js.vjs-theme-forest .vjs-button:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
+}
+*/
+
+/* COMENTADO - causa desalineación con otros botones */
+/*
+.video-js.vjs-theme-forest .vjs-play-control {
+  font-size: 16px;
+  margin-right: 4px;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  vertical-align: top !important;
+}
+
+.video-js.vjs-theme-forest .vjs-play-control .vjs-icon-placeholder {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  vertical-align: baseline !important;
+}
+
+.video-js.vjs-theme-forest .vjs-play-control .vjs-icon-placeholder:before {
+  line-height: 1 !important;
+  vertical-align: baseline !important;
+}
+*/
+
+/* COMENTADO - se maneja en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-volume-panel {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 4px !important;
+  height: 32px !important;
+  position: relative !important;
+}
+*/
+
+/* COMENTADO - manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-progress-control {
+  flex: 1;
+  height: 6px;
+  margin: 0 12px;
+  display: flex;
+  align-items: center;
+}
+*/
+
+.video-js.vjs-theme-forest .vjs-progress-holder {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  width: 100%;
+  position: relative;
+}
+
+.video-js.vjs-theme-forest .vjs-play-progress {
+  background: linear-gradient(90deg, #e50914, #b20710);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.5);
+  height: 100%;
+}
+
+.video-js.vjs-theme-forest .vjs-load-progress {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+  height: 100%;
+}
+
+.video-js.vjs-theme-forest .vjs-time-control {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 2px;
+  margin: 0 1px;
+}
+
+/* Show both current time and duration on the left side */
+.video-js.vjs-theme-forest .vjs-current-time {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-time-divider {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  margin: 0 1px;
+}
+
+.video-js.vjs-theme-forest .vjs-duration {
+  display: flex !important;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+/* Hide the remaining time display on the right side */
+.video-js.vjs-theme-forest .vjs-remaining-time {
+  display: none !important;
+}
+
+.video-js.vjs-theme-forest .vjs-current-time {
+  margin-right: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-time-divider {
+  margin: 0 1px;
+}
+
+.video-js.vjs-theme-forest .vjs-duration {
+  margin-left: 2px;
+}
+
+.video-js.vjs-theme-forest .vjs-custom-duration {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  margin: 0 2px;
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+/* COMENTADO - manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-fullscreen-control {
+  margin-left: 4px;
+}
+*/
+
+.video-js.vjs-theme-forest .vjs-picture-in-picture-control {
+  margin-right: 2px;
+}
+
+/* COMENTADO - height 100% causa problemas, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-volume-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 2px !important;
+  height: 100% !important;
+}
+*/
+
+/* COMENTADO - fuerza 32px y scale, causa desalineación, manejado en videojs-custom.css */
+/*
+.video-js.vjs-theme-forest .vjs-mute-control {
+  margin-right: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 32px !important;
+  width: 32px !important;
+  padding: 0 !important;
+}
+
+.video-js.vjs-theme-forest .vjs-mute-control:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-radius: 6px !important;
+  transform: scale(1.05) !important;
+  transition: all 0.2s ease !important;
+}
+*/
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .video-js.vjs-theme-forest .vjs-control-bar {
+    height: 50px;
+    padding: 0 12px;
+  }
+  
+  /* COMENTADO - manejado en videojs-custom.css */
+  /*
+  .video-js.vjs-theme-forest .vjs-button {
+    margin: 0 1px;
+    height: 28px;
+    min-width: 28px;
+    padding: 4px;
+  }
+  */
+  
+  /* COMENTADO - manejado en videojs-custom.css */
+  /*
+  .video-js.vjs-theme-forest .vjs-progress-control {
+    margin: 0 8px;
+  }
+  */
+  
+  .video-js.vjs-theme-forest .vjs-time-control {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 1px;
+  }
+  
+  .video-js.vjs-theme-forest .vjs-custom-duration {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 2px;
+  }
+}
+
+/* Loading state */
+.video-js.vjs-theme-forest .vjs-loading-spinner {
+  border-color: #e50914 transparent transparent transparent;
+}
+
+/* Big play button - Force centered positioning from initialization */
+.video-js.vjs-theme-forest .vjs-big-play-button {
+  background: rgba(0,0,0,0.7);
+  border: 2px solid #e50914;
+  border-radius: 50%;
+  color: #e50914;
+  font-size: 2.5em;
+  height: 80px;
+  width: 80px;
+  line-height: 76px;
+  /* Force centered positioning immediately */
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  transition: all 0.3s ease;
+  /* Hide when video is not ready */
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Show big play button only when video is ready and not playing */
+.video-js.vjs-theme-forest.vjs-paused .vjs-big-play-button,
+.video-js.vjs-theme-forest.vjs-ended .vjs-big-play-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-js.vjs-theme-forest .vjs-big-play-button:hover {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: #b20710;
+  color: #b20710;
+  transform: scale(1.1);
+}
+
+/* Error display */
+.video-js.vjs-theme-forest .vjs-error-display {
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+}
+
+.video-js.vjs-theme-forest .vjs-error-display .vjs-modal-dialog-content {
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Menu styling */
+.video-js.vjs-theme-forest .vjs-menu {
+  background: rgba(0,0,0,0.9);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item {
+  color: #fff;
+  padding: 8px 16px;
+  transition: background 0.2s ease;
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item:hover {
+  background: rgba(229, 9, 20, 0.2);
+}
+
+.video-js.vjs-theme-forest .vjs-menu-item.vjs-selected {
+  background: rgba(229, 9, 20, 0.3);
+  color: #e50914;
+}
+
+/* 1) Asegurar un contenedor relativo para que z-index funcione */
+.video-js.vjs-theme-forest {
+  position: relative; /* clave para stacking correcto */
+}
+
+/* 2) Traer los subtítulos al frente y que no bloqueen clicks */
+.video-js.vjs-theme-forest .vjs-text-track-display,
+.video-js.vjs-theme-forest .vjs-text-track-display .vjs-text-track-cue {
+  position: absolute !important;        /* fuerza a estar sobre el video */
+  left: 0; right: 0; top: 0; bottom: 0; /* ocupa todo el player */
+  z-index: 2000;                        /* > control bar (1000) y overlays (500) */
+  pointer-events: none;                 /* no interfiere con controles */
+}
+
+/* 3) Mantener la barra de controles clickeable */
+.video-js.vjs-theme-forest .vjs-control-bar {
+  z-index: 1000;
+}
+
+/* 4) Estética de los subtítulos */
+.video-js.vjs-theme-forest .vjs-text-track-display {
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,.8);
+}
+
+/* 5) Evitar que el fondo opaco tape algo */
+.video-js.vjs-theme-forest .vjs-text-track-cue {
+  background: transparent !important;
+}
+
+/* 6) Fullscreen: repetir reglas para asegurar prioridad */
+.video-js.vjs-theme-forest.vjs-fullscreen .vjs-text-track-display,
+.video-js.vjs-theme-forest.vjs-fullscreen .vjs-text-track-display .vjs-text-track-cue {
+  z-index: 2000;
+}
+
+/* Prime Video style skip controls */
+.prime-skip-zone {
+  position: absolute;
+  top: 35%;
+  width: 25%;
+  height: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  z-index: 500;
+  pointer-events: none; /* Disable pointer events by default */
+}
+
+.prime-skip-zone.prime-skip-visible,
+.video-js.vjs-paused .prime-skip-zone {
+  opacity: 1;
+  pointer-events: auto; /* Enable pointer events only when visible */
+}
+
+.prime-skip-zone.prime-skip-clicked {
+  transform: scale(1.1);
+  transition: transform 0.1s ease;
+}
+
+.prime-skip-zone.prime-skip-backward {
+  left: 10%;
+}
+
+.prime-skip-zone.prime-skip-forward {
+  right: 10%;
+}
+
+.prime-skip-icon {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Play/Pause button in center */
+.prime-play-pause-zone {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  z-index: 500;
+  pointer-events: none; /* Disable pointer events by default */
+}
+
+.prime-play-pause-zone.prime-skip-visible,
+.video-js.vjs-paused .prime-play-pause-zone {
+  opacity: 1;
+  pointer-events: auto; /* Enable pointer events only when visible */
+}
+
+.prime-play-pause-zone.prime-skip-clicked {
+  transform: translate(-50%, -50%) scale(1.1);
+  transition: transform 0.1s ease;
+}
+
+.prime-play-pause-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR - Modern dark theme
+   ======================================== */
+
+/* Scrollbar para todos los elementos (excepto los que tengan scrollbar-hide) */
+*:not(.scrollbar-hide) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Webkit scrollbar (Chrome, Safari, Edge) */
+*:not(.scrollbar-hide)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*:not(.scrollbar-hide)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*:not(.scrollbar-hide)::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+*:not(.scrollbar-hide)::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Asegurar que scrollbar-hide siempre oculte el scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ========================================
+   CUSTOM VOLUME SLIDER - Modal trailer
+   ======================================== */
+
+/* Estilo moderno para el slider de volumen */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+}
+
+/* Slider thumb (la bolita) - Webkit */
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #5e44ef;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(94, 68, 239, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(94, 68, 239, 0.8);
+}
+
+/* Slider thumb - Firefox */
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #5e44ef;
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 0 8px rgba(94, 68, 239, 0.5);
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(94, 68, 239, 0.8);
+}
+
+/* ========================================
+   FIX: Ocultar botón de subtítulos default y mostrar el real
+   ======================================== */
+/* Ocultar el botón genérico de subtítulos/captions que crea Video.js */
+.video-js .vjs-subs-caps-button {
+  display: none !important;
+}
+
+/* Asegurar que el botón real de subtítulos esté visible */
+.video-js .vjs-subtitles-button {
+  display: block !important;
+}

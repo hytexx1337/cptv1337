@@ -1,0 +1,1064 @@
+/* Estilos personalizados para Video.js */
+
+/* Asegurar que el reproductor ocupe exactamente el espacio del contenedor */
+.video-js {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-top: 0 !important;
+  aspect-ratio: auto !important;
+  position: relative !important; /* Necesario para que el modal absolute funcione en fullscreen */
+}
+
+/* 🎯 Reposicionar subtítulos dinámicamente según barra de controles */
+.video-js .vjs-text-track-display {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 2em !important; /* Posición base siempre */
+  z-index: 3 !important; /* Por ENCIMA de la barra de controles para que nunca se tapen */
+  pointer-events: none !important;
+  transform: translateY(0) !important; /* Sin desplazamiento por defecto */
+  /* SIN transición para movimiento instantáneo */
+}
+
+/* Cuando el usuario está activo (barra visible), mover subtítulos hacia arriba con transform */
+.video-js.vjs-user-active .vjs-text-track-display {
+  transform: translateY(-120px) !important; /* Mover 120px hacia arriba */
+}
+
+/* En fullscreen también aplicar el mismo comportamiento */
+.video-js.vjs-fullscreen .vjs-text-track-display {
+  transform: translateY(0) !important;
+}
+
+.video-js.vjs-fullscreen.vjs-user-active .vjs-text-track-display {
+  transform: translateY(-120px) !important;
+}
+
+/* Subtítulos sin fondo, solo con sombra */
+.video-js .vjs-text-track-cue,
+.video-js .vjs-text-track-cue > div,
+video::cue {
+  background: transparent !important;
+  background-color: transparent !important;
+  text-shadow: 
+    -2px -2px 4px rgba(0, 0, 0, 0.9),
+    2px -2px 4px rgba(0, 0, 0, 0.9),
+    -2px 2px 4px rgba(0, 0, 0, 0.9),
+    2px 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+}
+
+/* Estilos para el modal de subtítulos en fullscreen */
+:fullscreen [data-fullscreen="true"],
+:-webkit-full-screen [data-fullscreen="true"],
+:-moz-full-screen [data-fullscreen="true"],
+:-ms-fullscreen [data-fullscreen="true"] {
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: white !important;
+}
+
+:fullscreen [data-fullscreen="true"] *,
+:-webkit-full-screen [data-fullscreen="true"] *,
+:-moz-full-screen [data-fullscreen="true"] *,
+:-ms-fullscreen [data-fullscreen="true"] * {
+  box-sizing: border-box !important;
+}
+
+/* Animación de spin para loaders del modal */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.video-js video,
+.video-js .vjs-tech {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  z-index: 0 !important; /* Video en el fondo pero visible (controles z-index: 2, subtítulos z-index: 3) */
+}
+
+/* Forzar z-index del video en fullscreen */
+.video-js.vjs-fullscreen video,
+.video-js.vjs-fullscreen .vjs-tech {
+  z-index: 0 !important; /* Video en el fondo en fullscreen también */
+}
+
+[data-vjs-player] {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+}
+
+/* ===== CHROMECAST ===== */
+/* Botón de Chromecast en la esquina superior derecha */
+.video-js .vjs-chromecast-button {
+  /* Sacarlo del flujo del control bar y posicionarlo arriba */
+  position: fixed !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 1000 !important;
+  
+  /* Estilos visuales */
+  background: rgba(0, 0, 0, 0.7) !important;
+  border-radius: 50% !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  
+  /* Flexbox para centrar el ícono */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  
+  /* Ocultar el texto si hay */
+  font-size: 0 !important;
+}
+
+.video-js .vjs-chromecast-button:hover {
+  background: rgba(0, 0, 0, 0.9) !important;
+  transform: scale(1.1) !important;
+}
+
+.video-js .vjs-chromecast-button svg {
+  display: block !important;
+  margin: auto !important;
+  pointer-events: none !important;
+}
+
+/* Cuando está conectado a Chromecast */
+.video-js .vjs-chromecast-button.vjs-chromecast-casting-state {
+  background: rgba(220, 38, 38, 0.9) !important;
+}
+
+.video-js .vjs-chromecast-button.vjs-chromecast-casting-state:hover {
+  background: rgba(220, 38, 38, 1) !important;
+}
+
+.video-js .vjs-chromecast-button.vjs-chromecast-casting-state svg {
+  fill: white !important;
+}
+
+/* Ocultar botón de Chromecast cuando el usuario está inactivo */
+.video-js.vjs-user-inactive .vjs-chromecast-button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease !important;
+}
+
+/* Mostrar botón de Chromecast cuando el usuario está activo */
+.video-js.vjs-user-active .vjs-chromecast-button {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: opacity 0.3s ease !important;
+}
+
+/* Ocultar spinner nativo de carga */
+.video-js .vjs-loading-spinner {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.video-js.vjs-waiting .vjs-loading-spinner {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.video-js .vjs-loading-spinner::before,
+.video-js .vjs-loading-spinner::after {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* Ocultar estados de loading */
+.video-js.vjs-waiting,
+.video-js.vjs-seeking {
+  pointer-events: auto !important;
+}
+
+.video-js.vjs-waiting .vjs-loading-spinner,
+.video-js.vjs-seeking .vjs-loading-spinner {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Ocultar el big play button nativo - usamos el personalizado */
+.video-js .vjs-big-play-button {
+  display: none !important;
+}
+
+/* Control bar estilo Netflix - 2 FILAS usando FLEX + WRAP */
+.video-js.vjs-theme-forest .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%) !important;
+  backdrop-filter: none !important;
+  padding: 20px 24px !important;
+  height: auto !important;
+  min-height: 120px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: stretch !important; /* Permite que elementos se estiren */
+  align-content: flex-start !important; /* Controla alineación de las filas */
+  gap: 0 !important;
+  z-index: 2 !important; /* Por encima del video (Video.js ya tiene position: absolute por defecto) */
+}
+
+/* BREAKER: Fuerza salto de línea entre fila 1 y fila 2 */
+.video-js.vjs-theme-forest .vjs-control-bar::after {
+  content: "" !important;
+  order: 4 !important;
+  flex-basis: 100% !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* OCULTAR el time divider (/) que no queremos */
+.video-js.vjs-theme-forest .vjs-time-divider {
+  display: none !important;
+}
+
+/* FILA 1: Tiempo actual + Barra de progreso + Duración */
+/* SIMETRÍA REAL: ambos tiempos con WIDTH FIJO IGUAL */
+.video-js.vjs-theme-forest .vjs-current-time {
+  order: 1 !important;
+  flex: 0 0 auto !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  font-family: 'Poppins', sans-serif !important;
+  text-align: left !important;
+  margin: 0 8px 12px 24px !important; /* Reducido margin-right de 16px a 8px para centrar barra */
+  width: 80px !important;
+  align-self: center !important; /* Centrar en su fila */
+  display: flex !important;
+  align-items: center !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-progress-control {
+  order: 2 !important;
+  flex: 1 1 auto !important;
+  /* Márgenes separados para mayor especificidad */
+  margin-top: 0 !important;
+  margin-right: 16px !important;
+  margin-bottom: 12px !important;
+  margin-left: 0px !important; /* SIN margen izquierdo */
+  height: 3px !important; /* Reducido de 6px a 3px (mitad) */
+  min-height: 3px !important;
+  max-height: 3px !important;
+  display: flex !important;
+  align-items: center !important;
+  align-self: center !important; /* Centrar en su fila */
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important; /* Asegurar también padding izquierdo */
+}
+
+.video-js.vjs-theme-forest .vjs-duration {
+  order: 3 !important;
+  flex: 0 0 auto !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  font-family: 'Poppins', sans-serif !important;
+  text-align: right !important;
+  margin: 0 0 12px 8px !important; /* Aumentado margin-left de 0px a 8px para centrar barra */
+  width: 80px !important;
+  align-self: center !important; /* Centrar en su fila */
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* FILA 2: Controles */
+/* REGLA COMÚN PARA LOS 8 BOTONES QUE REALMENTE EXISTEN */
+/* MÁXIMA ESPECIFICIDAD POSIBLE PARA SOBREESCRIBIR GLOBALS.CSS */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control {
+  /* FORZAR tamaño exacto - Aumentado 50% de 48px a 72px */
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+  max-width: 72px !important;
+  max-height: 72px !important;
+  
+  /* FORZAR alineación vertical */
+  align-self: center !important;
+  vertical-align: middle !important;
+  
+  /* FORZAR display y alineación interna */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  /* FORZAR espaciado */
+  padding: 0 !important; /* SIN padding, el flexbox centra el contenido */
+  border-radius: 8px !important;
+  margin: 0 !important; /* Reset margin, se define individualmente */
+  margin-top: 0 !important; /* Sin margin-top por defecto */
+  margin-bottom: 0 !important;
+  
+  /* FORZAR reset de propiedades conflictivas de globals.css */
+  transform: none !important; /* NO scale */
+  line-height: 1 !important; /* NO 2 */
+  position: relative !important; /* NO static */
+  flex: 0 0 auto !important; /* NO flex: none */
+  
+  /* Transición para background y transform */
+  transition: background-color 0.2s ease, transform 0.15s ease !important;
+}
+
+/* Ahora solo definir order y margin específicos para cada botón */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control {
+  order: 10 !important;
+  margin-right: 8px !important;
+  /* REFORZAR alineación vertical específicamente para play */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  align-self: center !important;
+  vertical-align: baseline !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button {
+  order: 11 !important;
+  margin-right: 8px !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button {
+  order: 12 !important;
+  margin-right: 8px !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  line-height: 1 !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control .vjs-icon-placeholder:before {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  display: block !important;
+}
+
+/* SVG icons también */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button svg {
+  width: 36px !important;
+  height: 36px !important;
+  display: block !important;
+  margin: auto !important;
+}
+
+/* Hover sutil con solo scale para TODOS los botones */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button:hover,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control:hover {
+  transform: scale(1.08) !important; /* Solo aumentar tamaño un poquito */
+  background: transparent !important; /* Sin brillo ni glow */
+}
+
+/* Sin fondo al hacer click (active) o focus */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button:focus,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control:focus {
+  background: transparent !important; /* Sin fondo al clickear */
+  outline: none !important; /* Sin outline de focus */
+  transform: scale(1) !important; /* Volver a tamaño normal */
+}
+
+/* FORZAR centrado de icon-placeholders sin afectar el menú */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button .vjs-icon-placeholder,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control .vjs-icon-placeholder {
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute !important; /* Necesario para que top/bottom/left/right funcionen */
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important; /* Ocupar todo el botón */
+  height: 100% !important; /* Ocupar todo el botón */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* OCULTAR iconos :before porque usamos SVG personalizados */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-backward-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-skip-forward-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control .vjs-icon-placeholder:before {
+  display: none !important;
+  content: none !important;
+}
+
+/* EXTRA: Forzar que play-control y mute-control no tengan propiedades heredadas problemáticas */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-play-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control {
+  vertical-align: baseline !important;
+  text-align: center !important;
+}
+
+/* Asegurar que el hover SOLO se active en hover real, no cuando slider está activo */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel.vjs-slider-active .vjs-mute-control {
+  background: transparent !important;
+}
+
+/* Hover del botón de volumen ya está en la regla común de arriba */
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel {
+  order: 13 !important;
+  margin-right: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  align-self: center !important; /* AGREGAR: para alinearlo con los demás botones */
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 0 !important;
+  flex: 0 0 auto !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Mute control ya tiene estilos de la regla común */
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  line-height: 1 !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control .vjs-icon-placeholder:before {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  display: flex !important; /* Cambiado de block a flex */
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: baseline !important;
+}
+
+/* SVG icons también */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control svg {
+  width: 36px !important;
+  height: 36px !important;
+  display: block !important;
+  margin: auto !important;
+}
+
+/* Ya manejado en la regla hover común de arriba */
+
+/* Skip buttons eliminados - NO EXISTEN */
+
+/* Contenedor de la fila 2 con wrappers */
+.cpt-row-2 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important; /* Solo en fila 2, no rompe la barra */
+  width: 100% !important;
+  order: 5 !important; /* Después de la fila 1 */
+}
+
+/* Grupos izquierda y derecha en el flujo normal */
+.cpt-row-2-left,
+.cpt-row-2-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  z-index: 2 !important; /* Por encima del título */
+}
+
+/* Título superpuesto y centrado pixel-perfect */
+.cpt-row-2-title {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important; /* JS ajustará translateX */
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  white-space: nowrap !important;
+  overflow-x: hidden !important; /* Solo ocultar horizontalmente */
+  overflow-y: visible !important; /* Permitir que las descendentes sean visibles */
+  text-overflow: ellipsis !important;
+  max-width: 400px !important;
+  pointer-events: none !important; /* No interfiere con clicks */
+  text-align: center !important;
+  z-index: 1 !important; /* Debajo de los botones */
+  line-height: 1.4 !important; /* Espacio suficiente para descendentes */
+  padding: 4px 0 !important; /* Padding vertical para evitar cortes */
+}
+
+/* Fallback para título viejo si existe */
+.video-js.vjs-theme-forest .netflix-title-inbar {
+  display: none !important; /* Ocultar si no se usa la nueva estructura */
+}
+
+/* Derecha: SOLO 4 botones que existen */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button {
+  order: 20 !important;
+  margin-left: auto !important; /* Empuja a la derecha */
+  margin-right: 8px !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button {
+  order: 21 !important;
+  margin-right: 8px !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button {
+  order: 22 !important;
+  margin-right: 8px !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button {
+  order: 23 !important;
+  margin-right: 8px !important;
+}
+
+/* Agregar estilos para SVG de botones de episodios y próximo episodio */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button svg {
+  width: 24px !important;
+  height: 24px !important;
+  display: block !important;
+  margin: auto !important;
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control {
+  order: 23 !important; /* Cambió de 22 a 23 */
+  /* Sin margin-right (último elemento) */
+}
+
+/* Regla eliminada - Ya está definida arriba con más especificidad */
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button .vjs-icon-placeholder:before,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control .vjs-icon-placeholder:before {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  display: block !important;
+}
+
+/* SVG icons también */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitles-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-episode-selector-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-next-episode-button svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control .vjs-icon-placeholder svg,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-fullscreen-control svg {
+  width: 36px !important;
+  height: 36px !important;
+  display: block !important;
+  margin: auto !important;
+}
+
+/* Ya manejado en la regla hover común de arriba */
+
+/* Altura del progress control ya está definido arriba, no duplicar */
+
+.video-js.vjs-theme-forest .vjs-progress-holder {
+  height: 3px !important; /* Reducido a 3px (mitad de 6px) */
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 2px !important; /* Ajustado proporcionalmente */
+}
+
+.video-js .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 2px !important;
+}
+
+.video-js .vjs-play-progress {
+  background: #e50914 !important;
+  border-radius: 2px !important;
+}
+
+/* Botones de control - FORZAR propiedades para todos los botones */
+.video-js .vjs-button {
+  margin: 0 4px !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s ease, transform 0.15s ease !important;
+}
+
+.video-js .vjs-button:hover:not(:active):not(:focus) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transform: scale(1.08) !important; /* Solo aumentar tamaño */
+}
+
+/* Sin fondo en active y focus para todos los botones - OVERRIDE DE GLOBALS.CSS */
+.video-js .vjs-button:active,
+.video-js .vjs-button:focus,
+.video-js.vjs-theme-forest .vjs-button:active,
+.video-js.vjs-theme-forest .vjs-button:focus,
+.video-js .vjs-button:hover,
+.video-js .vjs-button:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.video-js .vjs-button:active,
+.video-js.vjs-theme-forest .vjs-button:active {
+  transform: scale(1) !important;
+}
+
+/* SOBREESCRIBIR reglas de globals.css que causan desalineación */
+/* SOLO para BOTONES, NO para progress-control o time-control */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-button {
+  transform: none !important;
+  height: auto !important; /* NO heredar height: 100% de .vjs-control */
+  padding: 0 !important; /* NO heredar padding: 0.5em */
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-button:hover {
+  transform: scale(1.08) !important; /* Solo aumentar tamaño */
+  background: transparent !important; /* Sin brillo */
+}
+
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-button:active,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-button:focus {
+  background: transparent !important;
+  outline: none !important;
+  transform: scale(1) !important;
+}
+
+/* FORZAR mute-control que tiene reglas específicas en globals.css líneas 841-856 y 1418-1433 */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel .vjs-mute-control {
+  height: 48px !important; /* NO 32px de globals.css */
+  width: 48px !important; /* NO 32px de globals.css */
+  min-height: 48px !important;
+  min-width: 48px !important;
+  max-height: 48px !important;
+  max-width: 48px !important;
+}
+
+/* Regla duplicada eliminada - ya está en hover común */
+
+/* Volume control */
+.video-js .vjs-volume-control,
+.video-js .vjs-volume-panel {
+  display: flex;
+  align-items: center;
+  margin: 0 8px;
+}
+
+/* Fullscreen button */
+.video-js .vjs-fullscreen-control {
+  margin-left: 8px;
+}
+
+/* Video element styles */
+.video-js video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Tema forest personalizado */
+.vjs-theme-forest .vjs-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
+  backdrop-filter: none;
+}
+
+.vjs-theme-forest .vjs-big-play-button {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.vjs-theme-forest .vjs-play-progress {
+  background-color: #e50914;
+}
+
+/* Progress bar - REGLA ELIMINADA, ya está definida arriba en FILA 1 */
+
+/* Volumen con espacio justo para expandirse */
+.video-js .vjs-volume-panel {
+  margin-left: 12px !important;
+  margin-right: 2px !important;
+  min-width: 14em !important; /* Espacio justo para el slider */
+  flex-shrink: 0 !important; /* No se comprime */
+}
+
+/* Dar espacio entre controles de la derecha */
+.video-js .vjs-subs-caps-button,
+.video-js .vjs-subtitles-button {
+  margin-right: 8px !important;
+}
+
+/* Forzar visibilidad de botones de subtítulos y fullscreen */
+.video-js .vjs-subs-caps-button,
+.video-js .vjs-subtitles-button,
+.video-js .vjs-captions-button,
+.video-js .vjs-fullscreen-control {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Evitar que los botones se compriman y muevan */
+.video-js .vjs-subs-caps-button,
+.video-js .vjs-subtitles-button,
+.video-js .vjs-subtitle-upload-button,
+.video-js .vjs-skip-backward-button,
+.video-js .vjs-skip-forward-button,
+.video-js .vjs-fullscreen-control {
+  flex-shrink: 0 !important;
+}
+
+/* FORZAR visibilidad de los botones de skip */
+.video-js .vjs-skip-backward-button,
+.video-js .vjs-skip-forward-button {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* OCULTAR MENÚ DE SUBTÍTULOS - Solo usar el modal de configuración */
+.video-js .vjs-subtitles-button .vjs-menu,
+.video-js .vjs-subs-caps-button .vjs-menu {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* MENÚ DESHABILITADO - Ya no se muestra en hover */
+
+/* REGLAS DE MENÚ COMENTADAS - Ya no se usa el menú desplegable, solo el modal */
+
+/* Estilos específicos para el botón de configuración */
+.video-js .vjs-subtitle-settings-btn {
+  border-top: 1px solid rgba(255,255,255,0.1) !important;
+  display: block !important; /* Asegurar que sea visible */
+  visibility: visible !important; /* Forzar visibilidad */
+  opacity: 1 !important; /* Asegurar opacidad completa */
+  position: relative !important; /* Asegurar posicionamiento */
+  z-index: 1 !important; /* Asegurar que esté por encima */
+  background: transparent !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  min-height: 32px !important; /* Altura mínima para el botón */
+  padding: 8px 12px !important; /* Padding específico */
+}
+
+.video-js .vjs-subtitle-settings-btn:hover {
+  background: rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+
+.video-js .vjs-subtitle-settings-btn .vjs-menu-item-text {
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Feedback Visual de Botones (Zoom In + Fade) */
+.vjs-button-feedback {
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vjs-button-feedback svg {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
+}
+
+/* Volume Control - Horizontal SIEMPRE VISIBLE */
+.video-js .vjs-volume-level {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.video-js .vjs-volume-bar {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Ocultar barra de volumen por defecto - MÁXIMA ESPECIFICIDAD */
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel-horizontal .vjs-volume-control,
+.video-js .vjs-volume-panel-horizontal .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-volume-panel .vjs-volume-control.vjs-volume-horizontal {
+  width: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  display: none !important;
+  transition: width 0.2s ease, opacity 0.2s ease, visibility 0.2s ease !important;
+}
+
+/* Mostrar barra de volumen SOLO en hover del volume panel */
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal:hover .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal.vjs-slider-active .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel-horizontal:hover .vjs-volume-control,
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-volume-panel-horizontal.vjs-slider-active .vjs-volume-control,
+.video-js .vjs-volume-panel-horizontal:hover .vjs-volume-control,
+.video-js .vjs-volume-panel-horizontal.vjs-slider-active .vjs-volume-control {
+  width: 7em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+/* Alinear verticalmente todo el volume panel */
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.video-js.vjs-theme-forest .vjs-volume-bar.vjs-slider-horizontal {
+  height: 3px !important; /* Barra más finita */
+  border-radius: 2px !important;
+  position: relative !important;
+}
+
+/* 🎯 Tooltip de tiempo en barra de progreso - Hover */
+.video-js .vjs-progress-control .vjs-time-tooltip,
+.video-js .vjs-progress-control .vjs-mouse-display .vjs-time-tooltip {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  bottom: 20px !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  line-height: 1.2 !important;
+  height: auto !important;
+  min-height: auto !important;
+  width: auto !important;
+  text-align: center !important;
+  display: block !important;
+  transform: translateY(0) !important;
+}
+
+/* Tooltip cuando está en el mouse display (hover) */
+.video-js .vjs-progress-control .vjs-mouse-display .vjs-time-tooltip {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ocultar el tooltip que aparece en el play progress (el que muestra el tiempo actual) */
+.video-js .vjs-progress-control .vjs-play-progress .vjs-time-tooltip {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Ocultar elementos nativos del slider horizontal de volumen */
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal .vjs-volume-bar .vjs-slider:before,
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal .vjs-volume-bar .vjs-slider:after,
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal .vjs-mouse-display,
+.video-js.vjs-theme-forest .vjs-volume-panel-horizontal .vjs-volume-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Handle (círculo) del volumen horizontal - ELIMINADO porque molestaba */
+
+/* Ajustar el nivel de volumen también */
+.video-js.vjs-theme-forest .vjs-volume-level {
+  height: 3px !important;
+  border-radius: 2px !important;
+}
+
+/* ============================================
+   OCULTAR BOTÓN DE SUBTITLE UPLOAD
+   (Debe estar al final para tener prioridad)
+   ============================================ */
+.video-js.vjs-theme-forest .vjs-control-bar .vjs-subtitle-upload-button {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ============================================
+   OVERLAY DE PAUSA (Información de contenido)
+   ============================================ */
+.vjs-pause-info-overlay {
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2500 !important;
+  pointer-events: none !important;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.75) 40%, rgba(0, 0, 0, 0.4) 70%, transparent 100%) !important;
+}
+
+.pause-overlay-content {
+  max-width: 600px;
+}
+
+.pause-overlay-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.pause-overlay-logo {
+  max-width: 400px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  margin-bottom: 20px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.pause-overlay-title {
+  font-size: 42px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+}
+
+.pause-overlay-metadata {
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pause-overlay-synopsis {
+  font-size: 16px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 550px;
+}
+
+/* 🎨 Contenedor de subtítulos ASS/SSA */
+.vjs-ass-subtitle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* Asegurar que funcione en fullscreen */
+.video-js.vjs-fullscreen .vjs-ass-subtitle-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+

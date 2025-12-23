@@ -1,0 +1,6 @@
+# Ignorar base de datos de cache de trailers
+trailer-cache.json
+
+# Permitir este .gitignore
+!.gitignore
+

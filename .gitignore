@@ -1,0 +1,306 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+# Pero permitir el ejemplo
+!.env.example
+!env.example.txt
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# ============================================
+# Project-specific ignores
+# ============================================
+
+# Test files
+test-*.js
+test-*.html
+test_*.srt
+
+# Debug files
+debug-*.js
+
+# VPS & Streaming Server files
+streaming-server.js
+torrent-server.js
+vps-*.js
+vps-*.sh
+subtitle-endpoint.js
+
+# Deploy scripts
+deploy-*.sh
+deploy-*.bat
+deploy-*.ps1
+auto-install-vps.sh
+install-*.sh
+fix-*.sh
+complete-*.sh
+check-*.sh
+optimize-*.sh
+setup-vps-streaming.js
+
+# Jackett related
+jackett-*.js
+jackett-*.json
+jackett-*.bat
+
+# Scrapers & API test files
+opensubtitles-*.js
+openscraper*.json
+audio-sync-fixer.js
+quick-vps-test.js
+player4me-test.js
+
+# PM2 & Process management
+ecosystem.config.js
+
+# Package server (for VPS)
+package-server.json
+
+# Temporary directories
+/downloads
+/tmp
+/temp
+backup-migration-*/
+
+# Logs and text files
+*.txt
+LOGS.TXT
+# Pero permitir ciertos archivos importantes
+!README*.md
+
+# Subtitles temporales
+*.srt
+extracted_subtitles.srt
+
+# YAML configs temporales
+1337x.yml
+
+# HTML test files
+hbo-max-player.html
+
+# Public assets que no son parte del proyecto
+/public/ffmpeg-core.js
+/public/ffmpeg-core.wasm
+
+# Types folder raíz (si no es necesario)
+/types
+
+# Test pages en src/app
+/src/app/test/
+/src/app/test-*/
+/src/app/*-test/
+/src/app/series-test/
+/src/app/streaming-test/
+/src/app/torrent-test/
+/src/app/yts-test/
+
+# ============================================
+# Additional files for GitHub/Vercel deployment
+# ============================================
+
+# Video files (very large)
+*.mkv
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+
+# Development scripts
+*.py
+cleanup-endpoint.js
+torrent-timeout-fix.js
+file-analyzer.*
+analyze-video-url.py
+explore-workers-endpoints.py
+
+# Analysis reports
+file-analysis-report-*.json
+
+# Development folders
+cloudflare-r2-test/
+scripts/
+subdivx-test/
+
+# Development documentation
+CONFIGURACION-GOFILE-LOCALHOST.md
+INSTALACION-VPS.md
+README-LOGGER.md
+README-VIDEO-ANALYZER.md
+
+# Downloaded HTML files
+"Play Dirty.html"
+"Play Dirty_files/"
+
+# Backup files
+*.bak
+*_backup.*
+*_copy.*
+
+# Archivos temporales y backups
+*.backup.json
+*-backup*.json
+console-backup/
+CineParaTodos/
+android-tv-app/
+
+# Test files in sandbox
+sandbox-111movies-test/
+test-*.mjs
+
+# Browser extensions (AdGuard, uBlock, etc)
+extensions/
+.playwright-data/
+
+# Analysis files
+*-analysis.json
+downloaded-files-db*.json
+downloaded-files.json
+duplicates-report.json
+parsed-lgos-entries.json
+
+# Root level test files
+a.js
+a.py
+1.py
+add-missing-entries.js
+browser_fetch_proxy.js
+cleanup-endpoint.js
+crypto-js.min.js
+fix-database-tmdb.js
+generate-final-json.mjs
+get-playable-url.mjs
+hashids.min.js
+hybrid-streaming-server.js
+install-service.js
+streaming-server.js
+torrent-timeout-fix.js
+vps-subtitle-storage.js
+vps-torrent-uploader.js
+videasy-codegen.spec.ts
+test-db.mjs
+test-gofile-episodes.mjs
+package-vps.json
+
+# ============================================
+# Additional ignores for GitHub deployment
+# ============================================
+
+# SSH Keys y credenciales
+hytex
+hytex.pub
+*.pem
+*.key
+*.pub
+
+# Directorios de desarrollo/testing completos
+watchparty-backend/
+stream-cache-service/
+cat-catch/
+ScrapingCuevana/
+.cacheeeeee/
+
+# Documentación interna/VPS
+*-VPS.md
+*-INSTALL*.md
+*-SETUP*.md
+*-GUIDE.md
+*-INSTRUCTIONS.md
+*-CHECKLIST.md
+*-AUDIT*.md
+*-HARDENING*.md
+*-SECURITY*.md
+*-INCIDENT*.md
+*-SUMMARY.md
+*-UPDATES.md
+ARQUITECTURA-*.md
+VPS-*.md
+NGINX-*.md
+CUEVANA-*.md
+DEPLOYMENT-*.md
+EMERGENCY-*.md
+IMPLEMENTATION-*.md
+INCIDENT-*.md
+PUPPETEER-*.md
+QUICK-*.md
+RESUMEN-*.md
+SECURITY-*.md
+SERVER-*.md
+STREAMING-*.md
+TRAILER-*.md
+WATCHPARTY-*.md
+WHITELIST-*.md
+CUSTOM-STREAMS-*.md
+
+# Configs de servidor
+nginx-*.conf
+ecosystem.config.cjs
+*.service
+
+# Scripts de mantenimiento
+*.sh
+*.bat
+!git-*.bat
+convert-to-unix.ps1
+
+# Archivos de análisis y network traces
+*-analysis.json
+*-network-*.json
+*.spec.ts
+*.zip
+*.rar
+*.7z
+
+# Data files sensibles
+/data/*.json
+!/data/.gitkeep
+
+# Root level clutter
+scraper.mjs
+trailer_server.py
+rotten.py
+git-clean-push.bat
+get_imdb_trailer.py
+analyze-*.mjs
+filter-*.mjs
+*.min.js
+
+# Playwright
+playwright.config.ts
+.playwright-data/

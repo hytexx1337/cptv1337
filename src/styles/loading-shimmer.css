@@ -1,0 +1,16 @@
+/* Efecto de reveal vertical para logo (estilo Stremio) */
+@keyframes reveal-up {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0.3;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+.logo-reveal {
+  animation: reveal-up 1.5s ease-out infinite;
+}
+

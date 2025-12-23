@@ -1,0 +1,15 @@
+/**
+ * ⚠️ DEPRECATED - Este archivo ya no se usa
+ * 
+ * El botón de configuración de subtítulos ahora se agrega directamente
+ * en la inicialización del player (useVideoPlayer.ts) en lugar de usar
+ * un plugin con setTimeout.
+ * 
+ * Esto garantiza que el botón siempre esté disponible desde el inicio
+ * y elimina race conditions y timing issues.
+ * 
+ * Ver: src/hooks/useVideoPlayer.ts líneas ~2587-2648
+ * 
+ * Fecha de deprecación: 2025-01-08
+ */
+

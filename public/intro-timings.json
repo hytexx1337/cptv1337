@@ -1,0 +1,176 @@
+{
+  "community": {
+    "tmdbId": 18347,
+    "title": "Community",
+    "seasons": {
+      "1": {
+        "episodes": {
+          "1": {
+            "intro": {
+              "start": 0,
+              "end": 30
+            },
+            "credits": {
+              "start": 1260,
+              "end": 1320
+            }
+          },
+          "2": {
+            "intro": {
+              "start": 0,
+              "end": 25
+            },
+            "credits": {
+              "start": 1250,
+              "end": 1310
+            }
+          },
+          "3": {
+            "intro": {
+              "start": 0,
+              "end": 28
+            },
+            "credits": {
+              "start": 1270,
+              "end": 1330
+            }
+          },
+          "4": {
+            "intro": {
+              "start": 0,
+              "end": 30
+            },
+            "credits": {
+              "start": 1280,
+              "end": 1340
+            }
+          },
+          "5": {
+            "intro": {
+              "start": 0,
+              "end": 25
+            },
+            "credits": {
+              "start": 1265,
+              "end": 1325
+            }
+          }
+        }
+      },
+      "2": {
+        "episodes": {
+          "1": {
+            "intro": {
+              "start": 0,
+              "end": 30
+            },
+            "credits": {
+              "start": 1275,
+              "end": 1335
+            }
+          },
+          "2": {
+            "intro": {
+              "start": 0,
+              "end": 28
+            },
+            "credits": {
+              "start": 1260,
+              "end": 1320
+            }
+          }
+        }
+      }
+    }
+  },
+  "game-of-thrones": {
+    "tmdbId": 1399,
+    "title": "Game of Thrones",
+    "seasons": {
+      "1": {
+        "episodes": {
+          "1": {
+            "intro": {
+              "start": 0,
+              "end": 90
+            },
+            "credits": {
+              "start": 3420,
+              "end": 3600
+            }
+          },
+          "2": {
+            "intro": {
+              "start": 0,
+              "end": 90
+            },
+            "credits": {
+              "start": 3300,
+              "end": 3480
+            }
+          }
+        }
+      }
+    }
+  },
+  "dexter": {
+    "tmdbId": 1405,
+    "title": "Dexter",
+    "seasons": {
+      "1": {
+        "episodes": {
+          "2": {
+            "intro": {
+              "start": 1,
+              "end": 106
+            },
+            "credits": {
+              "start": 3228,
+              "end": 3275
+            }
+          },
+          "3": {
+            "intro": {
+              "start": 108,
+              "end": 217
+            },
+            "credits": {
+              "start": 0,
+              "end": 0
+            }
+          },
+          "4": {
+            "intro": {
+              "start": 6,
+              "end": 104
+            },
+            "credits": {
+              "start": 3416,
+              "end": 3461
+            }
+          }
+        }
+      }
+    }
+  },
+  "tulsa-king": {
+    "tmdbId": 153312,
+    "title": "Tulsa King",
+    "seasons": {
+      "1": {
+        "episodes": {
+          "2": {
+            "intro": {
+              "start": 178,
+              "end": 241
+            },
+            "credits": {
+              "start": 0,
+              "end": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

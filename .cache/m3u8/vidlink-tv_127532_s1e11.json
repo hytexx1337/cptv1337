@@ -1,0 +1,57 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/_v7/56c2dfa744ea2ae034f02320ce92bee16459353b2400c5684454f3252925c8d0829b5ebb2893874271f7065a542f49c8f22a248c1528afd6df2bd9b7abfa315baae0087d620ce445b3ec44809019691fcd12bb7017057a944cb3e4f054061290169e0705b67b3f35af530b0e9c4ce5101a810c10c7b667fc9fe5195316cd019d/master.m3u8?headers={%22referer%22:%22https://megacloud.blog/%22,%22origin%22:%22https://megacloud.blog%22}&host=https://fogtwist21.xyz",
+  "sourceUrl": "https://vidlink.pro/tv/127532/1/11?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "127532",
+  "season": "1",
+  "episode": "11",
+  "subtitles": [
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/ara-6.vtt",
+      "language": "ara",
+      "label": "Arabic"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/2ed28f641924f78a4be2f95f9810719a/2ed28f641924f78a4be2f95f9810719a.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/fre-7.vtt",
+      "language": "fre",
+      "label": "French"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/ger-8.vtt",
+      "language": "ger",
+      "label": "German"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/ita-9.vtt",
+      "language": "ita",
+      "label": "Italian"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/por-3.vtt",
+      "language": "por",
+      "label": "Portuguese"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/rus-10.vtt",
+      "language": "rus",
+      "label": "Russian"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/spa-5.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/03b5db1a5625b5f103f3c673c0ed986d/spa-4.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    }
+  ],
+  "timestamp": 1766442678323,
+  "expiresAt": 1774218678323
+}

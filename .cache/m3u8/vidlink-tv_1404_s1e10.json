@@ -1,0 +1,122 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/file2%2FwsFaC64pBFxtrSJwQGIOPUwVGv2RGLipjzUC6xZBokqK9pe7TbwsVCat%2Bw~HrQP~8NE9db4JoaSFEAK4O67%2B~Dri0n~ogfspMuNwL5eIc6R4tqSaG0qOa6hS1CNLyz%2B1K3l~zdOEk4nDPxFuFayhQ8G8YqBk7mWGSd99XnRGQLk%3D%2FcGxheWxpc3QubTN1OA%3D%3D.m3u8?headers={%22referer%22:%22https://videostr.net/%22,%22origin%22:%22https://videostr.net%22}&host=https://stormgleam42.xyz",
+  "sourceUrl": "https://vidlink.pro/tv/1404/1/10?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "1404",
+  "season": "1",
+  "episode": "10",
+  "subtitles": [
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/chi-25.vtt",
+      "language": "chi",
+      "label": "Chinese"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/cze-22.vtt",
+      "language": "cze",
+      "label": "Czech"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/dan-4.vtt",
+      "language": "dan",
+      "label": "Danish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/dut-12.vtt",
+      "language": "dut",
+      "label": "Dutch"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/eng-2.vtt",
+      "language": "eng",
+      "label": "English"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/fin-18.vtt",
+      "language": "fin",
+      "label": "Finnish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/fre-8.vtt",
+      "language": "fre",
+      "label": "French"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/gre-23.vtt",
+      "language": "gre",
+      "label": "Greek"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/heb-24.vtt",
+      "language": "heb",
+      "label": "Hebrew"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/hun-11.vtt",
+      "language": "hun",
+      "label": "Hungarian"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/ind-9.vtt",
+      "language": "ind",
+      "label": "Indonesian"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/ita-10.vtt",
+      "language": "ita",
+      "label": "Italian"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/may-3.vtt",
+      "language": "may",
+      "label": "Malay"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/nob-13.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/pol-14.vtt",
+      "language": "pol",
+      "label": "Polish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/por-15.vtt",
+      "language": "por",
+      "label": "Portuguese"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/por-16.vtt",
+      "language": "por",
+      "label": "Portuguese"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/rum-17.vtt",
+      "language": "rum",
+      "label": "Romanian"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/spa-5.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/spa-6.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/swe-19.vtt",
+      "language": "swe",
+      "label": "Swedish"
+    },
+    {
+      "url": "https://cca.megafiles.store/6c/91/6c915f287e6d916d4e54dce9d69f4631/tur-21.vtt",
+      "language": "tur",
+      "label": "Turkish"
+    }
+  ],
+  "timestamp": 1766442284673,
+  "expiresAt": 1774218284673
+}

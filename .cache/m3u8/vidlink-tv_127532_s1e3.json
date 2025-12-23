@@ -1,0 +1,17 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/_v7/ce660a56ec80029e15c4102b8f3b9838b25746a96ffe35965aabb6417487816b41065f2a0b3e3ea69530fc3cc3de3fdb58f829e9582f4925f8eee2767a9fa8d7a53230ca4ebed9a212d89ff04797c2df375f324d8ab853f97bc71e2a7b86b392621faddbea70a4576f07c3aa37bc7b1fe1f18265ac3e12df6da087932b57a721/master.m3u8?headers={%22referer%22:%22https://megacloud.blog/%22,%22origin%22:%22https://megacloud.blog%22}&host=https://rainveil36.xyz",
+  "sourceUrl": "https://vidlink.pro/tv/127532/1/3?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "127532",
+  "season": "1",
+  "episode": "3",
+  "subtitles": [
+    {
+      "url": "https://mgstatics.xyz/subtitle/319071290b3f1e78fb7395011662430d/319071290b3f1e78fb7395011662430d.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    }
+  ],
+  "timestamp": 1766401219462,
+  "expiresAt": 1774177219462
+}

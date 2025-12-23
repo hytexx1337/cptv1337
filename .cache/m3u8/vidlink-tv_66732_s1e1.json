@@ -1,0 +1,62 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/file2%2Fc3RozcYKRTD8N7eaw7C41pSYxvHV%2BoZh9uojwFNqsQD%2BfYgXNJtAq0NU5GBGqMp5RNIdEif3AtjKg9dI%2BTI~HLn1hygm711yNohdiLeMUOTZYEdG~JJniNjbPCC8QQmKHm63atXgqu10puM2ah2T%2BxAsmNqAhPhtTqd6V0N86IQ%3D%2FcGxheWxpc3QubTN1OA%3D%3D.m3u8?headers={%22referer%22:%22https://videostr.net/%22,%22origin%22:%22https://videostr.net%22}&host=https://stormgleam42.xyz",
+  "sourceUrl": "https://vidlink.pro/tv/66732/1/1?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "66732",
+  "season": "1",
+  "episode": "1",
+  "subtitles": [
+    {
+      "url": "https://cca.megafiles.store/fd/1f/fd1ff3ef854a743ea5d8719c40fc79f2/fd1ff3ef854a743ea5d8719c40fc79f2.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/88/4f/884f4a7a73a0d3396d97843797caf355/ger-4.vtt",
+      "language": "ger",
+      "label": "German"
+    },
+    {
+      "url": "https://cca.megafiles.store/88/4f/884f4a7a73a0d3396d97843797caf355/eng-2.vtt",
+      "language": "eng",
+      "label": "English"
+    },
+    {
+      "url": "https://cca.megafiles.store/88/4f/884f4a7a73a0d3396d97843797caf355/fre-3.vtt",
+      "language": "fre",
+      "label": "French"
+    },
+    {
+      "url": "https://cca.megafiles.store/72/d0/72d0a3aefe9ce91ffdcd09c0f27a45e2/72d0a3aefe9ce91ffdcd09c0f27a45e2.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/c9/18/c9187fab18dcf3a65adb85092a1599a1/c9187fab18dcf3a65adb85092a1599a1.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/5e/17/5e17a63428dae588f2c01ca2a489db50/5e17a63428dae588f2c01ca2a489db50.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/88/4f/884f4a7a73a0d3396d97843797caf355/ita-5.vtt",
+      "language": "ita",
+      "label": "Italian"
+    },
+    {
+      "url": "https://cca.megafiles.store/d9/5e/d95e0800a431dcfd16fc552218b297c4/d95e0800a431dcfd16fc552218b297c4.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/f1/ac/f1aca9d8884cf8ad44de583ad9d530b1/f1aca9d8884cf8ad44de583ad9d530b1.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    }
+  ],
+  "timestamp": 1766324307653,
+  "expiresAt": 1774100307653
+}
