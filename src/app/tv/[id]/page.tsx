@@ -415,20 +415,20 @@ export default function TVShowDetailPage() {
     // 1. Original → Vidlink (RÁPIDO ~300ms con caché)
     // 2. English Dub + Latino → Vidify (background)
     
-    // 1) Intentar Vidlink para Original (RÁPIDO)
+    // 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
     try {
       setCapturingOnline(true);
       setTorrentError(null);
-      logger.log(`⚡ [VIDLINK] Obteniendo stream Original para S${selectedSeason}E${episodeNumber}`);
+      logger.log(`⚡ [HLS-PROXY] Obteniendo stream Original para S${selectedSeason}E${episodeNumber}`);
       
-      const vidlinkStartTime = Date.now();
-      const vidlinkRes = await fetch(`/api/vidlink-puppeteer?type=tv&id=${tvShow.id}&season=${selectedSeason}&episode=${episodeNumber}`);
-      const vidlinkTime = Date.now() - vidlinkStartTime;
-      const vidlinkData = await vidlinkRes.json();
+      const proxyStartTime = Date.now();
+      const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=tv&id=${tvShow.id}&season=${selectedSeason}&episode=${episodeNumber}`);
+      const proxyTime = Date.now() - proxyStartTime;
+      const proxyData = await proxyRes.json();
       
-      logger.log(`📡 [VIDLINK] Respuesta - status: ${vidlinkRes.status}, tiempo: ${vidlinkTime}ms${vidlinkData.cached ? ' [CACHÉ]' : ''}`);
+      logger.log(`📡 [HLS-PROXY] Respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
       
-      if (vidlinkRes.ok && vidlinkData.streamUrl) {
+      if (proxyRes.ok && proxyData.playlistUrl) {
           // Aplicar resume si existe progreso guardado
           const savedProgress = watchHistory.getProgress('tv', tvShow.id.toString(), selectedSeason, episodeNumber);
           if (savedProgress && savedProgress.currentTime > 0) {
@@ -436,13 +436,13 @@ export default function TVShowDetailPage() {
             (window as any).resumeTime = savedProgress.currentTime;
           }
         
-        // Configurar stream Original desde Vidlink
-        setDirectStreamUrl(vidlinkData.streamUrl);
+        // Configurar stream Original
+        setDirectStreamUrl(proxyData.playlistUrl);
           
-        // Subtítulos de Vidlink
-        if (vidlinkData.subtitles && vidlinkData.subtitles.length > 0) {
-          logger.log(`📝 [VIDLINK] ${vidlinkData.subtitles.length} subtítulos recibidos`);
-          setExternalSubtitles(vidlinkData.subtitles);
+        // Subtítulos (ya vienen proxificados)
+        if (proxyData.subtitles && proxyData.subtitles.length > 0) {
+          logger.log(`📝 [HLS-PROXY] ${proxyData.subtitles.length} subtítulos recibidos`);
+          setExternalSubtitles(proxyData.subtitles);
           } else {
             setExternalSubtitles([]);
           }
@@ -451,7 +451,7 @@ export default function TVShowDetailPage() {
           setIsPlaying(true);
           const newUrl = cleanUrlKeepingWatchParty(tvShow.id);
           window.history.replaceState({}, '', newUrl);
-        playerLogger.log(`🎬 [VIDLINK] Reproduciendo Original S${selectedSeason}E${episodeNumber} (${vidlinkTime}ms)`);
+        playerLogger.log(`🎬 [HLS-PROXY] Reproduciendo Original S${selectedSeason}E${episodeNumber} (${proxyTime}ms)`);
         setCapturingOnline(false);
         
         // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
@@ -673,34 +673,34 @@ export default function TVShowDetailPage() {
           (window as any).resumeTime = savedProgress.currentTime;
         }
         
-        // 🚀 1) Intentar Vidlink para Original (RÁPIDO)
+        // 🚀 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
           try {
-          console.log(`⚡ [AUTOPLAY-DEBUG] Iniciando Vidlink para S${season}E${episode}...`);
-          logger.log(`⚡ [AUTOPLAY] Intentando Vidlink: S${season}E${episode}`);
+          console.log(`⚡ [AUTOPLAY-DEBUG] Iniciando hls-browser-proxy para S${season}E${episode}...`);
+          logger.log(`⚡ [AUTOPLAY] Intentando hls-browser-proxy: S${season}E${episode}`);
           
-          const vidlinkStartTime = Date.now();
-          const vidlinkRes = await fetch(`/api/vidlink-puppeteer?type=tv&id=${tvShow.id}&season=${season}&episode=${episode}`);
-          const vidlinkTime = Date.now() - vidlinkStartTime;
-          const vidlinkData = await vidlinkRes.json();
+          const proxyStartTime = Date.now();
+          const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=tv&id=${tvShow.id}&season=${season}&episode=${episode}`);
+          const proxyTime = Date.now() - proxyStartTime;
+          const proxyData = await proxyRes.json();
           
-          console.log('🔍 [AUTOPLAY-DEBUG] Vidlink respuesta:', { ok: vidlinkRes.ok, hasStream: !!vidlinkData.streamUrl, cached: vidlinkData.cached, time: vidlinkTime });
-          logger.log(`📡 [AUTOPLAY] Vidlink - status: ${vidlinkRes.status}, tiempo: ${vidlinkTime}ms${vidlinkData.cached ? ' [CACHÉ]' : ''}`);
+          console.log('🔍 [AUTOPLAY-DEBUG] hls-browser-proxy respuesta:', { ok: proxyRes.ok, hasPlaylist: !!proxyData.playlistUrl, cached: proxyData.cached, time: proxyTime, source: proxyData.source });
+          logger.log(`📡 [AUTOPLAY] hls-browser-proxy - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
           
-          if (vidlinkRes.ok && vidlinkData.streamUrl) {
-            // Configurar stream Original desde Vidlink
-            setDirectStreamUrl(vidlinkData.streamUrl);
+          if (proxyRes.ok && proxyData.playlistUrl) {
+            // Configurar stream Original
+            setDirectStreamUrl(proxyData.playlistUrl);
               
-            // Subtítulos de Vidlink
-            if (vidlinkData.subtitles && vidlinkData.subtitles.length > 0) {
-              logger.log(`📝 [AUTOPLAY] ${vidlinkData.subtitles.length} subtítulos de Vidlink`);
-              setExternalSubtitles(vidlinkData.subtitles);
+            // Subtítulos (ya vienen proxificados)
+            if (proxyData.subtitles && proxyData.subtitles.length > 0) {
+              logger.log(`📝 [AUTOPLAY] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
+              setExternalSubtitles(proxyData.subtitles);
               } else {
                 setExternalSubtitles([]);
               }
               
             // REPRODUCIR INMEDIATAMENTE
               setIsPlaying(true);
-            playerLogger.log(`🎬 [AUTOPLAY] Vidlink Original S${season}E${episode} (${vidlinkTime}ms)`);
+            playerLogger.log(`🎬 [AUTOPLAY] hls-browser-proxy Original S${season}E${episode} (${proxyTime}ms)`);
               
               // Limpiar los parámetros de URL
               const newUrl = cleanUrlKeepingWatchParty(tvShow.id);

@@ -314,44 +314,44 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
         // 1. Original → Vidlink (RÁPIDO ~3s o 0.3s con caché) - Iniciar reproducción inmediatamente
         // 2. English Dub + Latino → Vidify (en background) - Se agregan cuando estén listos
         
-        // 🎯 PRIORIDAD 1: Vidlink para Original (RÁPIDO)
-        logger.log('⚡ [CLIENT-PLAYER] Obteniendo stream Original desde Vidlink...');
+        // 🎯 PRIORIDAD 1: hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
+        logger.log('⚡ [CLIENT-PLAYER] Obteniendo stream Original desde hls-browser-proxy (Vidlink)...');
         try {
-          const vidlinkParams = new URLSearchParams({
+          const proxyParams = new URLSearchParams({
             type: normalizedType,
-            id: tmdbId.toString(),
+            id: imdbIdLocal || tmdbId.toString(), // Preferir IMDB si existe
           });
           if (isTv && seasonNum && episodeNum) {
-            vidlinkParams.set('season', seasonNum.toString());
-            vidlinkParams.set('episode', episodeNum.toString());
+            proxyParams.set('season', seasonNum.toString());
+            proxyParams.set('episode', episodeNum.toString());
           }
           
-          const vidlinkUrl = `/api/vidlink-puppeteer?${vidlinkParams.toString()}`;
-          logger.log(`🔗 [CLIENT-PLAYER] Llamando a Vidlink: ${vidlinkUrl}`);
+          const proxyUrl = `/api/hls-browser-proxy/start?${proxyParams.toString()}`;
+          logger.log(`🔗 [CLIENT-PLAYER] Llamando a hls-browser-proxy: ${proxyUrl}`);
           
-          const vidlinkStartTime = Date.now();
-          const vidlinkRes = await fetch(vidlinkUrl);
-          const vidlinkTime = Date.now() - vidlinkStartTime;
+          const proxyStartTime = Date.now();
+          const proxyRes = await fetch(proxyUrl);
+          const proxyTime = Date.now() - proxyStartTime;
           
-          logger.log(`📡 [CLIENT-PLAYER] Vidlink respuesta - status: ${vidlinkRes.status}, tiempo: ${vidlinkTime}ms`);
+          logger.log(`📡 [CLIENT-PLAYER] hls-browser-proxy respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms`);
           
-          if (vidlinkRes.ok) {
-            const vidlinkData = await vidlinkRes.json();
-            logger.log('📦 [CLIENT-PLAYER] Vidlink datos:', vidlinkData);
+          if (proxyRes.ok) {
+            const proxyData = await proxyRes.json();
+            logger.log('📦 [CLIENT-PLAYER] hls-browser-proxy datos:', proxyData);
             
-            if (vidlinkData.streamUrl) {
-              setStreamUrl(vidlinkData.streamUrl);
-              logger.log(`✅ [CLIENT-PLAYER] Stream Original desde Vidlink (${vidlinkTime}ms)${vidlinkData.cached ? ' [CACHÉ]' : ''}`);
+            if (proxyData.playlistUrl) {
+              setStreamUrl(proxyData.playlistUrl);
+              logger.log(`✅ [CLIENT-PLAYER] Stream Original desde hls-browser-proxy (${proxyTime}ms)${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
               
-              // Subtítulos de Vidlink
-              if (vidlinkData.subtitles && vidlinkData.subtitles.length > 0) {
-                setExternalSubtitles(vidlinkData.subtitles);
-                logger.log(`📝 [CLIENT-PLAYER] ${vidlinkData.subtitles.length} subtítulos de Vidlink`);
+              // Subtítulos (ya vienen proxificados)
+              if (proxyData.subtitles && proxyData.subtitles.length > 0) {
+                setExternalSubtitles(proxyData.subtitles);
+                logger.log(`📝 [CLIENT-PLAYER] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
               }
               
               // 🚀 REPRODUCIR INMEDIATAMENTE - No esperar a los demás
               setLoading(false);
-              playerLogger.log(`🎬 [WATCH] Vidlink Original listo, iniciando reproducción...`);
+              playerLogger.log(`🎬 [WATCH] Stream Original listo, iniciando reproducción...`);
               
               // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
               (async () => {
@@ -403,7 +403,7 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                 }
               })();
               
-              return; // Éxito con Vidlink, salir
+              return; // Éxito con hls-browser-proxy, salir
             }
           }
           

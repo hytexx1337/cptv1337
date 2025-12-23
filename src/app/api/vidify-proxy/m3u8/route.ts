@@ -125,10 +125,40 @@ export async function GET(req: NextRequest) {
       headers['Origin'] = origin;
     }
 
-    const response = await fetch(url, { 
+    let response = await fetch(url, { 
       headers,
       cache: 'no-store'
     });
+
+    // 🌐 FALLBACK: Si falla con 403/404, usar el proxy público de Vidify
+    if (!response.ok && (response.status === 403 || response.status === 404) && url.includes('kinej395aoo.com')) {
+      console.log(`[VIDIFY-PROXY-M3U8] ⚠️ Error ${response.status}, intentando con proxy público de Vidify...`);
+      
+      try {
+        // Construir URL del proxy de Vidify
+        const vidifyProxyUrl = `https://proxify.vidify.top/proxy?url=${encodeURIComponent(url)}`;
+        
+        console.log(`[VIDIFY-PROXY-M3U8] 🌥️ Usando: ${vidifyProxyUrl.substring(0, 100)}...`);
+        
+        response = await fetch(vidifyProxyUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://player.vidify.top/',
+            'Origin': 'https://player.vidify.top',
+          },
+          cache: 'no-store'
+        });
+        
+        if (response.ok) {
+          console.log(`[VIDIFY-PROXY-M3U8] ✅ Proxy público funcionó! Status: ${response.status}`);
+        } else {
+          console.error(`[VIDIFY-PROXY-M3U8] ❌ Proxy público también falló: ${response.status}`);
+        }
+      } catch (proxyError: any) {
+        console.error(`[VIDIFY-PROXY-M3U8] ❌ Error con proxy público:`, proxyError.message);
+      }
+    }
 
     if (!response.ok) {
       console.error(`[VIDIFY-PROXY-M3U8] ❌ Error ${response.status} ${response.statusText} al obtener: ${url}`);

@@ -345,18 +345,18 @@ export default function MovieDetailPage() {
     setCapturingOnline(true);
     setTorrentError(null);
 
-    // 🚀 1) Intentar Vidlink para Original (RÁPIDO)
+    // 🚀 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
     try {
-      logger.log(`⚡ [VIDLINK] Obteniendo stream Original para película ${movie.id}`);
+      logger.log(`⚡ [HLS-PROXY] Obteniendo stream Original para película ${movie.id}`);
       
-      const vidlinkStartTime = Date.now();
-      const vidlinkRes = await fetch(`/api/vidlink-puppeteer?type=movie&id=${movie.id}`);
-      const vidlinkTime = Date.now() - vidlinkStartTime;
-      const vidlinkData = await vidlinkRes.json();
+      const proxyStartTime = Date.now();
+      const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=movie&id=${movie.id}`);
+      const proxyTime = Date.now() - proxyStartTime;
+      const proxyData = await proxyRes.json();
       
-      logger.log(`📡 [VIDLINK] Respuesta - status: ${vidlinkRes.status}, tiempo: ${vidlinkTime}ms${vidlinkData.cached ? ' [CACHÉ]' : ''}`);
+      logger.log(`📡 [HLS-PROXY] Respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
       
-      if (vidlinkRes.ok && vidlinkData.streamUrl) {
+      if (proxyRes.ok && proxyData.playlistUrl) {
         // Aplicar resume si existe progreso guardado
         const savedProgress = watchHistory.getProgress('movie', movie.id.toString());
         if (savedProgress && savedProgress.currentTime > 0) {
@@ -364,13 +364,13 @@ export default function MovieDetailPage() {
           (window as any).resumeTime = savedProgress.currentTime;
         }
         
-        // Configurar stream Original desde Vidlink
-        setDirectStreamUrl(vidlinkData.streamUrl);
+        // Configurar stream Original
+        setDirectStreamUrl(proxyData.playlistUrl);
         
-        // Subtítulos de Vidlink
-        if (vidlinkData.subtitles && vidlinkData.subtitles.length > 0) {
-          logger.log(`📝 [VIDLINK] ${vidlinkData.subtitles.length} subtítulos recibidos`);
-          setExternalSubtitles(vidlinkData.subtitles);
+        // Subtítulos (ya vienen proxificados)
+        if (proxyData.subtitles && proxyData.subtitles.length > 0) {
+          logger.log(`📝 [HLS-PROXY] ${proxyData.subtitles.length} subtítulos recibidos`);
+          setExternalSubtitles(proxyData.subtitles);
         } else {
           setExternalSubtitles([]);
         }
@@ -379,7 +379,7 @@ export default function MovieDetailPage() {
         setIsPlaying(true);
         const newUrl = cleanUrlKeepingWatchParty(movie.id);
         window.history.replaceState({}, '', newUrl);
-        playerLogger.log(`🎬 [VIDLINK] Reproduciendo Original (${vidlinkTime}ms)`);
+        playerLogger.log(`🎬 [HLS-PROXY] Reproduciendo Original (${proxyTime}ms)`);
         setCapturingOnline(false);
         
         // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
@@ -543,32 +543,32 @@ export default function MovieDetailPage() {
           (window as any).resumeTime = savedProgress.currentTime;
         }
         
-        // 🚀 PRIORIDAD 1: Intentar Vidlink para Original (RÁPIDO)
+        // 🚀 PRIORIDAD 1: Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
         try {
-          logger.log(`⚡ [AUTOPLAY] Intentando Vidlink`);
+          logger.log(`⚡ [AUTOPLAY] Intentando hls-browser-proxy`);
           
-          const vidlinkStartTime = Date.now();
-          const vidlinkRes = await fetch(`/api/vidlink-puppeteer?type=movie&id=${movie.id}`);
-          const vidlinkTime = Date.now() - vidlinkStartTime;
-          const vidlinkData = await vidlinkRes.json();
+          const proxyStartTime = Date.now();
+          const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=movie&id=${movie.id}`);
+          const proxyTime = Date.now() - proxyStartTime;
+          const proxyData = await proxyRes.json();
           
-          logger.log(`📡 [AUTOPLAY] Vidlink - status: ${vidlinkRes.status}, tiempo: ${vidlinkTime}ms${vidlinkData.cached ? ' [CACHÉ]' : ''}`);
+          logger.log(`📡 [AUTOPLAY] hls-browser-proxy - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
           
-          if (vidlinkRes.ok && vidlinkData.streamUrl) {
-            // Configurar stream Original desde Vidlink
-            setDirectStreamUrl(vidlinkData.streamUrl);
+          if (proxyRes.ok && proxyData.playlistUrl) {
+            // Configurar stream Original
+            setDirectStreamUrl(proxyData.playlistUrl);
             
-            // Subtítulos de Vidlink
-            if (vidlinkData.subtitles && vidlinkData.subtitles.length > 0) {
-              logger.log(`📝 [AUTOPLAY] ${vidlinkData.subtitles.length} subtítulos de Vidlink`);
-              setExternalSubtitles(vidlinkData.subtitles);
+            // Subtítulos (ya vienen proxificados)
+            if (proxyData.subtitles && proxyData.subtitles.length > 0) {
+              logger.log(`📝 [AUTOPLAY] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
+              setExternalSubtitles(proxyData.subtitles);
             } else {
               setExternalSubtitles([]);
             }
             
             // REPRODUCIR INMEDIATAMENTE
             setIsPlaying(true);
-            playerLogger.log(`🎬 [AUTOPLAY] Vidlink Original (${vidlinkTime}ms)`);
+            playerLogger.log(`🎬 [AUTOPLAY] hls-browser-proxy Original (${proxyTime}ms)`);
             const newUrl = cleanUrlKeepingWatchParty(movie.id);
             window.history.replaceState({}, '', newUrl);
             
