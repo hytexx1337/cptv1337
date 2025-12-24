@@ -198,6 +198,11 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
                 logger.log(`🌍 [CLIENT-PLAYER] Países de origen (TV): ${tv.origin_country.join(', ')}`);
               }
               
+              // Obtener IMDB ID si está disponible
+              if (tv.external_ids?.imdb_id) {
+                imdbIdLocal = tv.external_ids.imdb_id;
+              }
+              
               // 🔄 BACKGROUND: Logo, sinopsis del episodio, external IDs, siguiente episodio
               (async () => {
                 try {
@@ -314,216 +319,183 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
         // 1. Original → Vidlink (RÁPIDO ~3s o 0.3s con caché) - Iniciar reproducción inmediatamente
         // 2. English Dub + Latino → Vidify (en background) - Se agregan cuando estén listos
         
-        // 🎯 PRIORIDAD 1: hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
-        logger.log('⚡ [CLIENT-PLAYER] Obteniendo stream Original desde hls-browser-proxy (Vidlink)...');
-          try {
-          const proxyParams = new URLSearchParams({
-              type: normalizedType,
-            id: imdbIdLocal || tmdbId.toString(), // Preferir IMDB si existe
-            });
-            if (isTv && seasonNum && episodeNum) {
-            proxyParams.set('season', seasonNum.toString());
-            proxyParams.set('episode', episodeNum.toString());
-            }
-            
-          const proxyUrl = `/api/hls-browser-proxy/start?${proxyParams.toString()}`;
-          logger.log(`🔗 [CLIENT-PLAYER] Llamando a hls-browser-proxy: ${proxyUrl}`);
-            
-          const proxyStartTime = Date.now();
-          const proxyRes = await fetch(proxyUrl);
-          const proxyTime = Date.now() - proxyStartTime;
+        // 🎯 ESTRATEGIA: 3 fetches en PARALELO
+        // 1. Vidlink (Original) - hls-browser-proxy
+        // 2. Vidify (English Dub)
+        // 3. Cuevana (Latino)
+        
+        logger.log('🚀 [CLIENT-PLAYER] Iniciando 3 fetches en paralelo: Vidlink (Original), Vidify (English Dub), Cuevana (Latino)...');
+        
+        // Preparar URLs
+        const proxyParams = new URLSearchParams({
+          type: normalizedType,
+          id: (isTv ? tmdbId.toString() : (imdbIdLocal || tmdbId.toString())), // TV usa TMDB, Movie prefiere IMDB
+        });
+        if (isTv && seasonNum && episodeNum) {
+          proxyParams.set('season', seasonNum.toString());
+          proxyParams.set('episode', episodeNum.toString());
+        }
+        const proxyUrl = `/api/hls-browser-proxy/start?${proxyParams.toString()}`;
+        
+        const vidifyParams = new URLSearchParams({
+          type: normalizedType,
+          id: tmdbId.toString(),
+          excludeLatino: 'true', // No buscar Latino, viene de Cuevana
+        });
+        if (isTv && seasonNum && episodeNum) {
+          vidifyParams.set('season', seasonNum.toString());
+          vidifyParams.set('episode', episodeNum.toString());
+        }
+        const vidifyUrl = `/api/streams/vidify-unified?${vidifyParams.toString()}`;
+        
+        let cuevanaUrl = '';
+        if (tmdbId) {
+          if (isTv && seasonNum && episodeNum) {
+            cuevanaUrl = `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
+          } else {
+            cuevanaUrl = `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
+          }
+        }
+        
+        logger.log(`🔗 [CLIENT-PLAYER] URLs preparadas:`);
+        logger.log(`  - Vidlink: ${proxyUrl}`);
+        logger.log(`  - Vidify: ${vidifyUrl}`);
+        logger.log(`  - Cuevana: ${cuevanaUrl || 'N/A'}`);
+        
+        // Fetch en paralelo (Vidlink es el más rápido y crítico)
+        try {
+          const startTime = Date.now();
+          const [proxyRes, vidifyRes, cuevanaRes] = await Promise.allSettled([
+            fetch(proxyUrl),
+            fetch(vidifyUrl),
+            cuevanaUrl ? fetch(cuevanaUrl) : Promise.reject('No TMDB ID')
+          ]);
+          const totalTime = Date.now() - startTime;
           
-          logger.log(`📡 [CLIENT-PLAYER] hls-browser-proxy respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms`);
-            
-          if (proxyRes.ok) {
-            const proxyData = await proxyRes.json();
-            logger.log('📦 [CLIENT-PLAYER] hls-browser-proxy datos:', proxyData);
+          logger.log(`⏱️ [CLIENT-PLAYER] 3 fetches completados en ${totalTime}ms`);
+          
+          // 1. PROCESAR VIDLINK (Original) - PRIORIDAD
+          if (proxyRes.status === 'fulfilled' && proxyRes.value.ok) {
+            const proxyData = await proxyRes.value.json();
+            logger.log('📦 [CLIENT-PLAYER] Vidlink (Original) datos:', proxyData);
               
             if (proxyData.playlistUrl) {
               setStreamUrl(proxyData.playlistUrl);
-              logger.log(`✅ [CLIENT-PLAYER] Stream Original desde hls-browser-proxy (${proxyTime}ms)${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
+              logger.log(`✅ [CLIENT-PLAYER] Stream Original desde Vidlink${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
               
-              // Subtítulos (ya vienen proxificados)
+              // Subtítulos
               if (proxyData.subtitles && proxyData.subtitles.length > 0) {
                 setExternalSubtitles(proxyData.subtitles);
                 logger.log(`📝 [CLIENT-PLAYER] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
               }
               
-              // 🚀 REPRODUCIR INMEDIATAMENTE - No esperar a los demás
+              // 🚀 REPRODUCIR INMEDIATAMENTE
               setLoading(false);
               playerLogger.log(`🎬 [WATCH] Stream Original listo, iniciando reproducción...`);
-              
-              // 🔄 BACKGROUND: Obtener English Dub desde Vidify y Latino desde Cuevana
-              (async () => {
-                try {
-                  // Parallel fetch: Vidify (English Dub) + Cuevana (Latino)
-                  logger.log('🌐 [CLIENT-PLAYER] [BACKGROUND] Obteniendo English Dub (Vidify) y Latino (Cuevana) en paralelo...');
-                  
-                  // 1. Vidify para English Dub SOLAMENTE (excluir Latino porque viene de Cuevana)
-                  const vidifyParams = new URLSearchParams({
-                    type: normalizedType,
-                    id: tmdbId.toString(),
-                    excludeLatino: 'true', // No buscar Latino, viene de Cuevana
-                  });
-                  if (isTv && seasonNum && episodeNum) {
-                    vidifyParams.set('season', seasonNum.toString());
-                    vidifyParams.set('episode', episodeNum.toString());
-                  }
-                  
-                  const vidifyUrl = `/api/streams/vidify-unified?${vidifyParams.toString()}`;
-                  
-                  // 2. Cuevana para Latino (usando TMDB ID)
-                  let cuevanaUrl = '';
-                  if (tmdbId) {
-                    if (isTv && seasonNum && episodeNum) {
-                      cuevanaUrl = `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
-                    } else {
-                      cuevanaUrl = `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
-                    }
-                    logger.log(`🎬 [CLIENT-PLAYER] [BACKGROUND] Cuevana URL: ${cuevanaUrl}`);
-                  } else {
-                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] No TMDB ID disponible para Cuevana');
-                  }
-                  
-                  // Fetch en paralelo
-                  const [vidifyRes, cuevanaRes] = await Promise.allSettled([
-                    fetch(vidifyUrl),
-                    cuevanaUrl ? fetch(cuevanaUrl) : Promise.reject('No IMDB ID')
-                  ]);
-                  
-                  // Procesar English Dub (Vidify)
-                  if (vidifyRes.status === 'fulfilled' && vidifyRes.value.ok) {
-                    const vidifyData = await vidifyRes.value.json();
-                    logger.log('📦 [CLIENT-PLAYER] [BACKGROUND] Vidify datos:', vidifyData);
-                    
-                    if (vidifyData.englishDub?.streamUrl) {
-                      const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
-                      
-                      if (isEnglishOrigin) {
-                        logger.log(`🚫 [CLIENT-PLAYER] [BACKGROUND] English Dub omitido (país de habla inglesa: ${localOriginCountries.join(', ')})`);
-                      } else {
-                        setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                        logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] English Dub agregado desde Vidify`);
-                      }
-                    }
-                  } else {
-                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Vidify falló para English Dub');
-                  }
-                  
-                  // Procesar Latino (Cuevana)
-                  if (cuevanaRes.status === 'fulfilled' && cuevanaRes.value.ok) {
-                    const cuevanaData = await cuevanaRes.value.json();
-                    logger.log('📦 [CLIENT-PLAYER] [BACKGROUND] Cuevana datos:', cuevanaData);
-                    
-                    // Adaptando formato de Cuevana al formato de la app
-                    if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
-                      setCustomStreamUrl(cuevanaData.video.url);
-                      logger.log(`✅ [CLIENT-PLAYER] [BACKGROUND] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
-                    } else {
-                      logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Cuevana no devolvió video válido');
-              }
-            } else {
-                    logger.warn('⚠️ [CLIENT-PLAYER] [BACKGROUND] Cuevana falló para Latino');
             }
-                } catch (err) {
-                  logger.error('❌ [CLIENT-PLAYER] [BACKGROUND] Error:', err);
+          } else {
+            logger.warn('⚠️ [CLIENT-PLAYER] Vidlink (Original) falló');
           }
-        })();
-
-              return; // Éxito con hls-browser-proxy, salir
+          
+          // 2. PROCESAR VIDIFY (English Dub)
+          if (vidifyRes.status === 'fulfilled' && vidifyRes.value.ok) {
+            const vidifyData = await vidifyRes.value.json();
+            logger.log('📦 [CLIENT-PLAYER] Vidify (English Dub) datos:', vidifyData);
+            
+            if (vidifyData.englishDub?.streamUrl) {
+              const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
+              
+              if (isEnglishOrigin) {
+                logger.log(`🚫 [CLIENT-PLAYER] English Dub omitido (país de habla inglesa: ${localOriginCountries.join(', ')})`);
+              } else {
+                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
+                logger.log(`✅ [CLIENT-PLAYER] English Dub agregado desde Vidify`);
+              }
             }
+          } else {
+            logger.warn('⚠️ [CLIENT-PLAYER] Vidify (English Dub) falló');
+          }
+          
+          // 3. PROCESAR CUEVANA (Latino)
+          if (cuevanaRes.status === 'fulfilled' && cuevanaRes.value.ok) {
+            const cuevanaData = await cuevanaRes.value.json();
+            logger.log('📦 [CLIENT-PLAYER] Cuevana (Latino) datos:', cuevanaData);
+            
+            // Adaptando formato de Cuevana al formato de la app
+            if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
+              setCustomStreamUrl(cuevanaData.video.url);
+              logger.log(`✅ [CLIENT-PLAYER] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
+            } else {
+              logger.warn('⚠️ [CLIENT-PLAYER] Cuevana no devolvió video válido');
+            }
+          } else {
+            logger.warn('⚠️ [CLIENT-PLAYER] Cuevana (Latino) falló');
+          }
+          
+          // Si Vidlink funcionó, salir (ya reproduciendo)
+          if (proxyRes.status === 'fulfilled' && proxyRes.value.ok) {
+            return;
           }
           
           // 🔄 FALLBACK: Vidlink falló, intentar Vidify para TODOS los idiomas (incluye original)
           logger.warn('⚠️ [CLIENT-PLAYER] Vidlink no devolvió stream, intentando Vidify para TODOS los idiomas...');
           
-          try {
-            const vidifyParams = new URLSearchParams({
-              type: normalizedType,
-              id: tmdbId.toString(),
-              includeOriginal: 'true', // Solicitar original también
-            });
-            if (isTv && seasonNum && episodeNum) {
-              vidifyParams.set('season', seasonNum.toString());
-              vidifyParams.set('episode', episodeNum.toString());
-            }
-            
-            const vidifyUrl = `/api/streams/vidify-unified?${vidifyParams.toString()}`;
-            const vidifyStartTime = Date.now();
-            const vidifyRes = await fetch(vidifyUrl);
-            const vidifyTime = Date.now() - vidifyStartTime;
-            
-            logger.log(`📡 [CLIENT-PLAYER] [FALLBACK] Vidify respuesta - status: ${vidifyRes.status}, tiempo: ${vidifyTime}ms`);
-            
-            if (vidifyRes.ok) {
-              const vidifyData = await vidifyRes.json();
-              logger.log('📦 [CLIENT-PLAYER] [FALLBACK] Vidify datos:', vidifyData);
-              
-              let hasAnyStream = false;
-              
-              // Original
-              if (vidifyData.original?.streamUrl) {
-                setStreamUrl(vidifyData.original.streamUrl);
-                logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Stream Original desde Vidify`);
-                if (vidifyData.original.subtitles && vidifyData.original.subtitles.length > 0) {
-                  setExternalSubtitles(vidifyData.original.subtitles);
-                }
-                hasAnyStream = true;
-              }
-              
-              // English Dub
-              if (vidifyData.englishDub?.streamUrl) {
-                const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
-                if (!isEnglishOrigin) {
-                  setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                  logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] English Dub agregado`);
-                  if (!hasAnyStream) hasAnyStream = true;
-                }
-              }
-              
-              // Latino desde Cuevana (fetch paralelo en background)
-              if (tmdbId) {
-                (async () => {
-                  try {
-                    const cuevanaUrl = isTv && seasonNum && episodeNum
-                      ? `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`
-                      : `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
-                    
-                    logger.log(`🎬 [CLIENT-PLAYER] [FALLBACK] Obteniendo Latino desde Cuevana: ${cuevanaUrl}`);
-                    
-                    const cuevanaRes = await fetch(cuevanaUrl);
-                    if (cuevanaRes.ok) {
-                      const cuevanaData = await cuevanaRes.json();
-                      // Adaptando formato de Cuevana
-                      if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
-                        setCustomStreamUrl(cuevanaData.video.url);
-                        logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
-                      } else {
-                        logger.warn('⚠️ [CLIENT-PLAYER] [FALLBACK] Cuevana no devolvió video válido');
-                      }
-                    } else {
-                      logger.warn(`⚠️ [CLIENT-PLAYER] [FALLBACK] Cuevana falló: ${cuevanaRes.status}`);
-                    }
-                  } catch (cuevanaErr) {
-                    logger.error('❌ [CLIENT-PLAYER] [FALLBACK] Error con Cuevana:', cuevanaErr);
-                  }
-                })();
-              }
-              
-              if (hasAnyStream) {
-                setLoading(false);
-                playerLogger.log(`🎬 [WATCH] Vidify streams cargados (fallback desde Vidlink)`);
-                return; // Éxito con Vidify
-              }
-            }
-            
-            logger.warn('⚠️ [CLIENT-PLAYER] Vidify tampoco devolvió streams, fallback a 111movies/GoFile...');
-          } catch (vidifyFallbackErr) {
-            logger.error('❌ [CLIENT-PLAYER] Error en fallback Vidify:', vidifyFallbackErr);
+          const vidifyParams = new URLSearchParams({
+            type: normalizedType,
+            id: tmdbId.toString(),
+            includeOriginal: 'true', // Solicitar original también
+          });
+          if (isTv && seasonNum && episodeNum) {
+            vidifyParams.set('season', seasonNum.toString());
+            vidifyParams.set('episode', episodeNum.toString());
           }
-        } catch (vidlinkErr) {
-          logger.error('❌ [CLIENT-PLAYER] Error con Vidlink:', vidlinkErr);
-          logger.log('🔄 [CLIENT-PLAYER] Fallback a 111movies/GoFile...');
+          
+          // Reusar vidifyUrl ya declarado arriba
+          const vidifyStartTime = Date.now();
+          const vidifyFallbackRes = await fetch(vidifyUrl);
+          const vidifyTime = Date.now() - vidifyStartTime;
+          
+          logger.log(`📡 [CLIENT-PLAYER] [FALLBACK] Vidify respuesta - status: ${vidifyFallbackRes.status}, tiempo: ${vidifyTime}ms`);
+          
+          if (vidifyFallbackRes.ok) {
+            const vidifyData = await vidifyFallbackRes.json();
+            logger.log('📦 [CLIENT-PLAYER] [FALLBACK] Vidify datos:', vidifyData);
+            
+            let hasAnyStream = false;
+            
+            // Original
+            if (vidifyData.original?.streamUrl) {
+              setStreamUrl(vidifyData.original.streamUrl);
+              logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Stream Original desde Vidify`);
+              if (vidifyData.original.subtitles && vidifyData.original.subtitles.length > 0) {
+                setExternalSubtitles(vidifyData.original.subtitles);
+              }
+              hasAnyStream = true;
+            }
+            
+            // English Dub
+            if (vidifyData.englishDub?.streamUrl) {
+              const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
+              if (!isEnglishOrigin) {
+                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
+                logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] English Dub agregado`);
+                if (!hasAnyStream) hasAnyStream = true;
+              }
+            }
+            
+            // ⚠️ NOTA: Latino desde Cuevana ya fue intentado en el fetch paralelo principal
+            // No hacer fetch duplicado aquí
+            
+            if (hasAnyStream) {
+              setLoading(false);
+              playerLogger.log(`🎬 [WATCH] Vidify streams cargados (fallback desde Vidlink)`);
+              return; // Éxito con Vidify
+            }
+          }
+          
+          logger.warn('⚠️ [CLIENT-PLAYER] Vidify tampoco devolvió streams, fallback a 111movies/GoFile...');
+        } catch (err) {
+          logger.error('❌ [CLIENT-PLAYER] Error en fetches paralelos:', err);
         }
 
         // 🔵 PRIORIDAD 2 (FALLBACK): Intentar 111movies

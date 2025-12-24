@@ -7,10 +7,11 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://81.17.102.98';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = params.path.join('/');
+    const { path: pathArray } = await params;
+    const path = pathArray.join('/');
     const url = new URL(request.url);
     const queryString = url.search;
     
@@ -44,10 +45,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = params.path.join('/');
+    const { path: pathArray } = await params;
+    const path = pathArray.join('/');
     const body = await request.text();
     
     const backendUrl = `${BACKEND_URL}/${path}`;
@@ -78,10 +80,11 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = params.path.join('/');
+    const { path: pathArray } = await params;
+    const path = pathArray.join('/');
     
     const backendUrl = `${BACKEND_URL}/${path}`;
     
