@@ -407,6 +407,11 @@ export default function TVShowDetailPage() {
       return;
     }
 
+    // SIMPLE: Navegar a /watch y dejar que ClientPlayer se encargue de todo
+    logger.log(`▶️ [TV-PAGE] Navegando a /watch para S${selectedSeason}E${episodeNumber}`);
+    router.push(`/watch?type=tv&id=${tvShow.id}&season=${selectedSeason}&episode=${episodeNumber}${watchPartyRoomId ? `&watchparty=${watchPartyRoomId}` : ''}${watchPartyUsername ? `&username=${watchPartyUsername}` : ''}`);
+    
+    /* CÓDIGO VIEJO ELIMINADO - Ahora usamos API unificada en ClientPlayer
     setSelectedEpisode(episodeNumber);
     setSelectedQuality(null);
     setVideoHasStarted(false); // Resetear cuando se cambia de episodio
@@ -414,110 +419,7 @@ export default function TVShowDetailPage() {
     // 🚀 NUEVA ESTRATEGIA OPTIMIZADA:
     // 1. Original → Vidlink (RÁPIDO ~300ms con caché)
     // 2. English Dub + Latino → Vidify (background)
-    
-    // 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
-    try {
-      setCapturingOnline(true);
-      setTorrentError(null);
-      logger.log(`⚡ [HLS-PROXY] Obteniendo stream Original para S${selectedSeason}E${episodeNumber}`);
-      
-      const proxyStartTime = Date.now();
-      const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=tv&id=${tvShow.id}&season=${selectedSeason}&episode=${episodeNumber}`);
-      const proxyTime = Date.now() - proxyStartTime;
-      const proxyData = await proxyRes.json();
-      
-      logger.log(`📡 [HLS-PROXY] Respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
-      
-      if (proxyRes.ok && proxyData.playlistUrl) {
-          // Aplicar resume si existe progreso guardado
-          const savedProgress = watchHistory.getProgress('tv', tvShow.id.toString(), selectedSeason, episodeNumber);
-          if (savedProgress && savedProgress.currentTime > 0) {
-            playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
-            (window as any).resumeTime = savedProgress.currentTime;
-          }
-        
-        // Configurar stream Original
-        setDirectStreamUrl(proxyData.playlistUrl);
-          
-        // Subtítulos (ya vienen proxificados)
-        if (proxyData.subtitles && proxyData.subtitles.length > 0) {
-          logger.log(`📝 [HLS-PROXY] ${proxyData.subtitles.length} subtítulos recibidos`);
-          setExternalSubtitles(proxyData.subtitles);
-          } else {
-            setExternalSubtitles([]);
-          }
-          
-        // REPRODUCIR INMEDIATAMENTE
-          setIsPlaying(true);
-          const newUrl = cleanUrlKeepingWatchParty(tvShow.id);
-          window.history.replaceState({}, '', newUrl);
-        playerLogger.log(`🎬 [HLS-PROXY] Reproduciendo Original S${selectedSeason}E${episodeNumber} (${proxyTime}ms)`);
-        setCapturingOnline(false);
-        
-        // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
-        (async () => {
-          try {
-            logger.log(`🌐 [VIDIFY] [BACKGROUND] Obteniendo English Dub y Latino...`);
-            
-            const vidifyStartTime = Date.now();
-            const vidifyRes = await fetch(`/api/streams/vidify-unified?type=tv&id=${tvShow.id}&season=${selectedSeason}&episode=${episodeNumber}`);
-            const vidifyTime = Date.now() - vidifyStartTime;
-            const vidifyData = await vidifyRes.json();
-            
-            logger.log(`📡 [VIDIFY] [BACKGROUND] Respuesta - status: ${vidifyRes.status}, tiempo: ${vidifyTime}ms`);
-            
-            if (vidifyRes.ok) {
-              if (vidifyData.englishDub?.streamUrl) {
-                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                logger.log(`✅ [VIDIFY] [BACKGROUND] English Dub agregado (${vidifyTime}ms)`);
-              }
-              
-              if (vidifyData.latino?.streamUrl) {
-                setCustomStreamUrl(vidifyData.latino.streamUrl);
-                logger.log(`✅ [VIDIFY] [BACKGROUND] Latino agregado (${vidifyTime}ms)`);
-              }
-            }
-          } catch (vidifyErr) {
-            logger.error('❌ [VIDIFY] [BACKGROUND] Error:', vidifyErr);
-          }
-        })();
-        return; // Éxito con Vidify
-      }
-    } catch (e: any) {
-      logger.warn('⚠️ Error iniciando Vidify, se intentará GoFile/Torrents:', e);
-    } finally {
-      setCapturingOnline(false);
-    }
-
-    // 2) Fallback a GoFile
-    try {
-      const files = await getEpisodeFiles(tvShow.id, selectedSeason, episodeNumber);
-      if (files.length > 0) {
-        playerLogger.log(`🎬 [AUTO-GOFILE] Seleccionando automáticamente GoFile para S${selectedSeason}E${episodeNumber}: ${files[0].fileName}`);
-        setDownloadedFiles(files);
-        const savedProgress = watchHistory.getProgress('tv', tvShow.id.toString(), selectedSeason, episodeNumber);
-        if (savedProgress && savedProgress.currentTime > 0) {
-          playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
-          (window as any).resumeTime = savedProgress.currentTime;
-        }
-        await updateLastAccessed(files[0].id);
-        setSelectedDownloadedFile(files[0]);
-        setIsPlaying(true);
-        preloadNextEpisodes(tvShow.id, selectedSeason, episodeNumber, 3)
-          .catch(error => logger.warn('⚠️ [PRELOAD] Error precargando episodios:', error));
-        return;
-      }
-    } catch (error) {
-      logger.error('Error verificando archivos GoFile:', error);
-    }
-
-    // 3) Fallback a Torrents
-    await fetchDownloadedFiles(episodeNumber);
-    if (imdbId) {
-      await searchSeriesTorrents(imdbId, selectedSeason, episodeNumber);
-    } else {
-      setTorrentError('No se encontró IMDb ID para esta serie');
-    }
+    */
   };
 
   // Función para obtener archivos descargados del episodio específico

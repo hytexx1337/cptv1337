@@ -1,0 +1,87 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/file2%2FUl9Tlu4mpPdQvN1pRgMwy5jCPlE4N~s%2BWQdf%2BvsaE9Ew0IPbSmpN5nqWnXffX2uVt6oTTPFqQULxxjFFQj2u4c%2BMwlqGmTDrDw5h7sh~1fcsM%2BGgonX1IxfDrBe3anuGLM4CYM88%2BWDidBZ7B~1SB4iippItwXFQsPY45rphCX4%3D%2FcGxheWxpc3QubTN1OA%3D%3D.m3u8?headers={%22referer%22:%22https://videostr.net/%22,%22origin%22:%22https://videostr.net%22}&host=https://rainflare53.pro",
+  "sourceUrl": "https://vidlink.pro/tv/615/1/1?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "615",
+  "season": "1",
+  "episode": "1",
+  "subtitles": [
+    {
+      "url": "https://cca.megafiles.store/7e/fe/7efe8367630d33862a5cee3ae084b92e/7efe8367630d33862a5cee3ae084b92e.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/b2/68/b268f77898b176a0e14e118c0099aac3/b268f77898b176a0e14e118c0099aac3.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/38/14/381490895e580d7aa8277f026a0b4f57/381490895e580d7aa8277f026a0b4f57.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/99/9d/999daee5ae8153f48bf28d63dbe30d6d/999daee5ae8153f48bf28d63dbe30d6d.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/f2/5b/f25b2b8542e157f47bca29e18d869b4b/eng-2.vtt",
+      "language": "eng",
+      "label": "English"
+    },
+    {
+      "url": "https://cca.megafiles.store/5d/63/5d63780ae51c77be0787ea7c2eaf85cc/5d63780ae51c77be0787ea7c2eaf85cc.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/46/b6/46b6b87ae3f72dd662132d0b8f5fa671/46b6b87ae3f72dd662132d0b8f5fa671.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/a3/cd/a3cdcc13a90a77548e47664ea6699f9e/a3cdcc13a90a77548e47664ea6699f9e.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/58/52/585298256ba9dbb280b0db6b81c3b897/585298256ba9dbb280b0db6b81c3b897.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/6e/29/6e2907ecc391f6b03b80aed2334be785/6e2907ecc391f6b03b80aed2334be785.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/b3/fd/b3fd009be3d8459da0d95da0a8a0aa54/b3fd009be3d8459da0d95da0a8a0aa54.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/bf/65/bf65b413c7f6bdd315dce548dfbb81cb/bf65b413c7f6bdd315dce548dfbb81cb.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/94/1d/941d9353a890b54465e68f1566f46b1b/941d9353a890b54465e68f1566f46b1b.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/cf/af/cfafb7043ad79ef8091b1761145fff90/cfafb7043ad79ef8091b1761145fff90.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://cca.megafiles.store/20/62/206231876dae774577e0804f007906f4/206231876dae774577e0804f007906f4.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    }
+  ],
+  "timestamp": 1766583397395,
+  "expiresAt": 1774359397395
+}

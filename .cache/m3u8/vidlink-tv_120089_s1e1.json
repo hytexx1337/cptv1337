@@ -1,0 +1,72 @@
+{
+  "streamUrl": "https://storm.vodvidl.site/proxy/_v7/fbb29d5d0bc81d66138fa9d978a30bf7a36af8b507380add5975366485836f3876935c90f0f4206f469a29b540cd4fb7a8f1b47400bb8d9aa83e825e0ff1ced5cbffd59429ac0d8a9c80370126b4b5e959c76b89561ec76019fa3c04c31127b9b9fbed6bb60702c2d9edeac99cc21cc146ffb6eb5ad0095c1004471cc65e2325/master.m3u8?headers={%22referer%22:%22https://megacloud.blog/%22,%22origin%22:%22https://megacloud.blog%22}&host=https://sunburst93.live",
+  "sourceUrl": "https://vidlink.pro/tv/120089/1/1?primaryColor=63b8bc&secondaryColor=a2a2a2&iconColor=eefdec&icons=default&player=jw&title=false&poster=false&autoplay=false&nextbutton=false",
+  "type": "vidlink-tv",
+  "id": "120089",
+  "season": "1",
+  "episode": "1",
+  "subtitles": [
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/ara-6.vtt",
+      "language": "ara",
+      "label": "Arabic"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/3ebfe9d6a4fa2f648c0d5c4061a8e0d1/3ebfe9d6a4fa2f648c0d5c4061a8e0d1.vtt",
+      "language": "unknown",
+      "label": "Unknown"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/fre-7.vtt",
+      "language": "fre",
+      "label": "French"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/ger-8.vtt",
+      "language": "ger",
+      "label": "German"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/1eb00f0d7f51846f14ab6ad7c09e1e0d/ind-3.vtt",
+      "language": "ind",
+      "label": "Indonesian"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/ita-9.vtt",
+      "language": "ita",
+      "label": "Italian"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/por-3.vtt",
+      "language": "por",
+      "label": "Portuguese"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/rus-10.vtt",
+      "language": "rus",
+      "label": "Russian"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/spa-5.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/b7938606f6201d232d335fc52c8a267d/spa-4.vtt",
+      "language": "spa",
+      "label": "Spanish"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/1eb00f0d7f51846f14ab6ad7c09e1e0d/tha-4.vtt",
+      "language": "tha",
+      "label": "Thai"
+    },
+    {
+      "url": "https://mgstatics.xyz/subtitle/1eb00f0d7f51846f14ab6ad7c09e1e0d/vie-5.vtt",
+      "language": "vie",
+      "label": "Vietnamese"
+    }
+  ],
+  "timestamp": 1766504987232,
+  "expiresAt": 1774280987232
+}

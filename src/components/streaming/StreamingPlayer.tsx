@@ -417,7 +417,11 @@ import io, { Socket } from 'socket.io-client';
       ? getProxiedCustomStreamUrl(customStreamUrl) as string 
       : selectedAudio === 'englishDub' && englishDubStreamUrl
         ? getProxiedCustomStreamUrl(englishDubStreamUrl) as string // También proxificar English Dub
-        : (directStreamUrl || goFileUrl || streamUrlForPlayer || null); // Prioridad: Latino > English Dub > Original
+        : directStreamUrl
+          ? (directStreamUrl.startsWith('http://') || directStreamUrl.startsWith('https://'))
+            ? getProxiedCustomStreamUrl(directStreamUrl) as string // Proxificar URLs directas (anime)
+            : directStreamUrl // URLs relativas (vidlink) no necesitan proxy
+          : (goFileUrl || streamUrlForPlayer || null); // Fallback final
     
     logger.log('🎬 [STREAM-URL-COMPUTED] URL calculada:', {
       selectedAudio,

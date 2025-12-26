@@ -341,110 +341,16 @@ export default function MovieDetailPage() {
   const handlePlay = async () => {
     if (!movie) return;
     
-    setVideoHasStarted(false); // Resetear cuando se empieza a reproducir
-      setCapturingOnline(true);
-      setTorrentError(null);
-
-    // 🚀 1) Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
-    try {
-      logger.log(`⚡ [HLS-PROXY] Obteniendo stream Original para película ${movie.id}`);
-      
-      const proxyStartTime = Date.now();
-      const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=movie&id=${movie.id}`);
-      const proxyTime = Date.now() - proxyStartTime;
-      const proxyData = await proxyRes.json();
-      
-      logger.log(`📡 [HLS-PROXY] Respuesta - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
-      
-      if (proxyRes.ok && proxyData.playlistUrl) {
-          // Aplicar resume si existe progreso guardado
-          const savedProgress = watchHistory.getProgress('movie', movie.id.toString());
-          if (savedProgress && savedProgress.currentTime > 0) {
-            playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
-            (window as any).resumeTime = savedProgress.currentTime;
-          }
-        
-        // Configurar stream Original
-        setDirectStreamUrl(proxyData.playlistUrl);
-          
-        // Subtítulos (ya vienen proxificados)
-        if (proxyData.subtitles && proxyData.subtitles.length > 0) {
-          logger.log(`📝 [HLS-PROXY] ${proxyData.subtitles.length} subtítulos recibidos`);
-          setExternalSubtitles(proxyData.subtitles);
-          } else {
-            setExternalSubtitles([]);
-          }
-          
-        // REPRODUCIR INMEDIATAMENTE
-          setIsPlaying(true);
-          const newUrl = cleanUrlKeepingWatchParty(movie.id);
-          window.history.replaceState({}, '', newUrl);
-        playerLogger.log(`🎬 [HLS-PROXY] Reproduciendo Original (${proxyTime}ms)`);
-        setCapturingOnline(false);
-        
-        // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
-        (async () => {
-          try {
-            logger.log(`🌐 [VIDIFY] [BACKGROUND] Obteniendo English Dub y Latino...`);
-            
-            const vidifyStartTime = Date.now();
-            const vidifyRes = await fetch(`/api/streams/vidify-unified?type=movie&id=${movie.id}`);
-            const vidifyTime = Date.now() - vidifyStartTime;
-            const vidifyData = await vidifyRes.json();
-            
-            logger.log(`📡 [VIDIFY] [BACKGROUND] Respuesta - status: ${vidifyRes.status}, tiempo: ${vidifyTime}ms`);
-            
-            if (vidifyRes.ok) {
-              if (vidifyData.englishDub?.streamUrl) {
-                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                logger.log(`✅ [VIDIFY] [BACKGROUND] English Dub agregado (${vidifyTime}ms)`);
-              }
-              
-              if (vidifyData.latino?.streamUrl) {
-                setCustomStreamUrl(vidifyData.latino.streamUrl);
-                logger.log(`✅ [VIDIFY] [BACKGROUND] Latino agregado (${vidifyTime}ms)`);
-              }
-            }
-          } catch (vidifyErr) {
-            logger.error('❌ [VIDIFY] [BACKGROUND] Error:', vidifyErr);
-          }
-        })();
-        
-        return; // Éxito con Vidlink
-      }
-    } catch (e: any) {
-      logger.warn('⚠️ Error iniciando Vidlink, se intentará GoFile/Torrents:', e);
-    } finally {
-      setCapturingOnline(false);
-    }
-
-    // 2) Fallback a GoFile
-    try {
-      const files = await getMovieFiles(movie.id);
-      if (files && files.length > 0) {
-        setDownloadedFiles(files);
-        setGoFileUrl(files[0].gofileDirectUrl);
-        setIsPlaying(true);
-        playerLogger.log(`🎬 [GOFILE] Reproduciendo archivo de GoFile: ${files[0].fileName}`);
-        return; // Éxito con GoFile
-      }
-    } catch (error) {
-      logger.error('Error verificando archivos GoFile:', error);
-    }
-
-    // 3) Fallback a Torrents
-    const releaseYear = movie?.release_date 
-      ? new Date(movie.release_date).getFullYear() 
-      : undefined;
-
-    setShowTorrents(true);
-    setSelectedQuality(null); // Reset quality selection
-    if (movie.imdb_id) {
-      await searchMovieTorrents(movie.imdb_id);
-    } else {
-      setTorrentError(`Esta película no tiene IMDb ID disponible. Se intentará buscar usando el título: "${movie?.title}"`);
-      await searchMovieTorrents('', movie?.title, releaseYear);
-    }
+    // SIMPLE: Navegar a /watch y dejar que ClientPlayer se encargue de todo
+    logger.log(`▶️ [MOVIE-PAGE] Navegando a /watch para película ${movie.id}`);
+    router.push(`/watch?type=movie&id=${movie.id}${watchPartyRoomId ? `&watchparty=${watchPartyRoomId}` : ''}${watchPartyUsername ? `&username=${watchPartyUsername}` : ''}`);
+    
+    /* CÓDIGO VIEJO ELIMINADO - Ahora usamos API unificada en ClientPlayer
+    setVideoHasStarted(false);
+    setCapturingOnline(true);
+    setTorrentError(null);
+    // ... todo el código viejo de APIs ...
+    */
   };
 
   // Seleccionar calidad
@@ -528,7 +434,7 @@ export default function MovieDetailPage() {
     return `/movie/${movieId}`;
   };
 
-  // Detectar autoplay desde "Continue Watching" o Watch Party con prioridad: 111movies > GoFile > Torrents
+  // Detectar autoplay desde "Continue Watching" o Watch Party - navegando a /watch
   useEffect(() => {
     const autoplay = searchParams.get('autoplay');
     const watchparty = searchParams.get('watchparty');
@@ -536,100 +442,19 @@ export default function MovieDetailPage() {
     const shouldAutoplay = autoplay === 'true' || (watchparty && watchPartyUsername);
     if (shouldAutoplay && movie && !isPlaying) {
       const autoplayMovie = async () => {
-        // Obtener progreso guardado para aplicar resume
+        // SIMPLE: Navegar a /watch y dejar que ClientPlayer se encargue de todo
+        logger.log(`🎬 [AUTOPLAY] Navegando a /watch para película ${movie.id}`);
+        router.push(`/watch?type=movie&id=${movie.id}${watchparty ? `&watchparty=${watchparty}` : ''}${watchPartyUsername ? `&username=${watchPartyUsername}` : ''}`);
+        
+        /* CÓDIGO VIEJO ELIMINADO - Ahora usamos API unificada en ClientPlayer
         const savedProgress = watchHistory.getProgress('movie', movie.id.toString());
-        if (savedProgress && savedProgress.currentTime > 0) {
-          playerLogger.log(`⏰ [RESUME] Continuando desde: ${savedProgress.currentTime}s (${savedProgress.progress.toFixed(1)}%)`);
-          (window as any).resumeTime = savedProgress.currentTime;
-        }
-        
-        // 🚀 PRIORIDAD 1: Intentar hls-browser-proxy para Original (RÁPIDO, usa Vidlink internamente)
-        try {
-          logger.log(`⚡ [AUTOPLAY] Intentando hls-browser-proxy`);
-          
-          const proxyStartTime = Date.now();
-          const proxyRes = await fetch(`/api/hls-browser-proxy/start?type=movie&id=${movie.id}`);
-          const proxyTime = Date.now() - proxyStartTime;
-          const proxyData = await proxyRes.json();
-          
-          logger.log(`📡 [AUTOPLAY] hls-browser-proxy - status: ${proxyRes.status}, tiempo: ${proxyTime}ms${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
-          
-          if (proxyRes.ok && proxyData.playlistUrl) {
-            // Configurar stream Original
-            setDirectStreamUrl(proxyData.playlistUrl);
-              
-            // Subtítulos (ya vienen proxificados)
-            if (proxyData.subtitles && proxyData.subtitles.length > 0) {
-              logger.log(`📝 [AUTOPLAY] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
-              setExternalSubtitles(proxyData.subtitles);
-              } else {
-                setExternalSubtitles([]);
-              }
-              
-            // REPRODUCIR INMEDIATAMENTE
-              setIsPlaying(true);
-            playerLogger.log(`🎬 [AUTOPLAY] hls-browser-proxy Original (${proxyTime}ms)`);
-              const newUrl = cleanUrlKeepingWatchParty(movie.id);
-              window.history.replaceState({}, '', newUrl);
-            
-            // 🔄 BACKGROUND: Obtener English Dub y Latino desde Vidify
-            (async () => {
-              try {
-                logger.log(`🌐 [AUTOPLAY] [BACKGROUND] Obteniendo English Dub y Latino desde Vidify...`);
-                
-                const vidifyStartTime = Date.now();
-                const vidifyRes = await fetch(`/api/streams/vidify-unified?type=movie&id=${movie.id}`);
-                const vidifyTime = Date.now() - vidifyStartTime;
-                const vidifyData = await vidifyRes.json();
-                
-                logger.log(`📡 [AUTOPLAY] [BACKGROUND] Vidify - status: ${vidifyRes.status}, tiempo: ${vidifyTime}ms`);
-                
-                if (vidifyRes.ok) {
-                  if (vidifyData.englishDub?.streamUrl) {
-                    setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                    logger.log(`✅ [AUTOPLAY] [BACKGROUND] English Dub agregado (${vidifyTime}ms)`);
-                  }
-                  
-                  if (vidifyData.latino?.streamUrl) {
-                    setCustomStreamUrl(vidifyData.latino.streamUrl);
-                    logger.log(`✅ [AUTOPLAY] [BACKGROUND] Latino agregado (${vidifyTime}ms)`);
-                  }
-                }
-              } catch (vidifyErr) {
-                logger.error('❌ [AUTOPLAY] [BACKGROUND] Error con Vidify:', vidifyErr);
-              }
-            })();
-            
-            return; // Éxito con Vidlink
-          }
-        } catch (e) {
-          logger.warn('⚠️ [AUTOPLAY] Error con Vidify, intentando GoFile:', e);
-        }
-        
-        // PRIORIDAD 2: Verificar si hay archivos GoFile disponibles
-        try {
-          const files = await getMovieFiles(movie.id);
-          if (files.length > 0) {
-            setDownloadedFiles(files);
-            setSelectedDownloadedFile(files[0]);
-            await updateLastAccessed(files[0].id);
-            setIsPlaying(true);
-            playerLogger.log(`🎬 [AUTOPLAY] GoFile: ${files[0].fileName}`);
-            const newUrl = cleanUrlKeepingWatchParty(movie.id);
-            window.history.replaceState({}, '', newUrl);
-            return; // Éxito con GoFile
-          }
-        } catch (error) {
-          logger.error('Error verificando archivos GoFile:', error);
-        }
-        
-        // PRIORIDAD 3: Fallback a torrents
-        setShowTorrents(true);
+        // ... todo el código viejo de APIs ...
+        */
       };
       
       autoplayMovie();
     }
-  }, [searchParams, movie, isPlaying, watchPartyUsername]);
+  }, [searchParams, movie, isPlaying, watchPartyUsername, router]);
 
   useEffect(() => {
     const fetchMovieData = async () => {

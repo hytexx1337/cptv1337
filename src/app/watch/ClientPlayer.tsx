@@ -8,6 +8,7 @@ import { useDownloadedFiles, DownloadedFile } from '@/hooks/useDownloadedFiles';
 import { watchHistory } from '@/lib/watch-history';
 import { logger, playerLogger } from '@/lib/logger';
 import { TMDBImages } from '@/types/tmdb';
+import { fetchUnifiedStreams, convertToLegacyFormat } from '@/lib/unifiedStreamingApi';
 
 interface ClientPlayerProps {
   type?: string;
@@ -315,411 +316,121 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
           }
         } catch {}
 
-        // 🚀 NUEVA ESTRATEGIA:
-        // 1. Original → Vidlink (RÁPIDO ~3s o 0.3s con caché) - Iniciar reproducción inmediatamente
-        // 2. English Dub + Latino → Vidify (en background) - Se agregan cuando estén listos
+        // 🚀 NUEVA ESTRATEGIA: API UNIFICADA
+        // Una sola llamada obtiene todos los idiomas en paralelo desde el backend:
+        // - Original: Vidlink (movies/series) o Anime SUB (anime japonés)
+        // - English Dub: Vidify (movies/series) o Anime DUB (anime japonés)
+        // - Latino: Cuevana (siempre)
         
-        // 🎯 ESTRATEGIA: 3 fetches en PARALELO
-        // 1. Vidlink (Original) - hls-browser-proxy
-        // 2. Vidify (English Dub)
-        // 3. Cuevana (Latino)
+        logger.log('🚀 [CLIENT-PLAYER] Llamando a API unificada de streaming...');
         
-        logger.log('🚀 [CLIENT-PLAYER] Iniciando 3 fetches en paralelo: Vidlink (Original), Vidify (English Dub), Cuevana (Latino)...');
-        
-        // Preparar URLs
-        const proxyParams = new URLSearchParams({
-          type: normalizedType,
-          id: (isTv ? tmdbId.toString() : (imdbIdLocal || tmdbId.toString())), // TV usa TMDB, Movie prefiere IMDB
-        });
-        if (isTv && seasonNum && episodeNum) {
-          proxyParams.set('season', seasonNum.toString());
-          proxyParams.set('episode', episodeNum.toString());
-        }
-        const proxyUrl = `/api/hls-browser-proxy/start?${proxyParams.toString()}`;
-        
-        const vidifyParams = new URLSearchParams({
-          type: normalizedType,
-          id: tmdbId.toString(),
-          excludeLatino: 'true', // No buscar Latino, viene de Cuevana
-        });
-        if (isTv && seasonNum && episodeNum) {
-          vidifyParams.set('season', seasonNum.toString());
-          vidifyParams.set('episode', episodeNum.toString());
-        }
-        const vidifyUrl = `/api/streams/vidify-unified?${vidifyParams.toString()}`;
-        
-        let cuevanaUrl = '';
-        if (tmdbId) {
-          // Usar variable de entorno o fallback a subdomain con SSL
-          const cuevanaApiBase = process.env.NEXT_PUBLIC_CUEVANA_API_URL || 'https://api.cineparatodos.lat';
-          if (isTv && seasonNum && episodeNum) {
-            cuevanaUrl = `${cuevanaApiBase}/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
-          } else {
-            cuevanaUrl = `${cuevanaApiBase}/fast/movie/${tmdbId}`;
-          }
-        }
-        
-        logger.log(`🔗 [CLIENT-PLAYER] URLs preparadas:`);
-        logger.log(`  - Vidlink: ${proxyUrl}`);
-        logger.log(`  - Vidify: ${vidifyUrl}`);
-        logger.log(`  - Cuevana: ${cuevanaUrl || 'N/A'}`);
-        
-        // Fetch en paralelo (Vidlink es el más rápido y crítico)
+        // ✨ UNA SOLA LLAMADA para obtener TODOS los idiomas
         try {
-          const startTime = Date.now();
-          const [proxyRes, vidifyRes, cuevanaRes] = await Promise.allSettled([
-            fetch(proxyUrl),
-            fetch(vidifyUrl),
-            cuevanaUrl ? fetch(cuevanaUrl) : Promise.reject('No TMDB ID')
-          ]);
-          const totalTime = Date.now() - startTime;
-          
-          logger.log(`⏱️ [CLIENT-PLAYER] 3 fetches completados en ${totalTime}ms`);
-          
-          // 1. PROCESAR VIDLINK (Original) - PRIORIDAD
-          if (proxyRes.status === 'fulfilled' && proxyRes.value.ok) {
-            const proxyData = await proxyRes.value.json();
-            logger.log('📦 [CLIENT-PLAYER] Vidlink (Original) datos:', proxyData);
-              
-            if (proxyData.playlistUrl) {
-              setStreamUrl(proxyData.playlistUrl);
-              logger.log(`✅ [CLIENT-PLAYER] Stream Original desde Vidlink${proxyData.cached ? ' [CACHÉ]' : ''} [${proxyData.source}]`);
-              
-              // Subtítulos
-              if (proxyData.subtitles && proxyData.subtitles.length > 0) {
-                setExternalSubtitles(proxyData.subtitles);
-                logger.log(`📝 [CLIENT-PLAYER] ${proxyData.subtitles.length} subtítulos de ${proxyData.source}`);
-              }
-              
-              // 🚀 REPRODUCIR INMEDIATAMENTE
-              setLoading(false);
-              playerLogger.log(`🎬 [WATCH] Stream Original listo, iniciando reproducción...`);
-            }
-          } else {
-            logger.warn('⚠️ [CLIENT-PLAYER] Vidlink (Original) falló');
-          }
-          
-          // 2. PROCESAR VIDIFY (English Dub)
-          if (vidifyRes.status === 'fulfilled' && vidifyRes.value.ok) {
-            const vidifyData = await vidifyRes.value.json();
-            logger.log('📦 [CLIENT-PLAYER] Vidify (English Dub) datos:', vidifyData);
-            
-            if (vidifyData.englishDub?.streamUrl) {
-              const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
-              
-              if (isEnglishOrigin) {
-                logger.log(`🚫 [CLIENT-PLAYER] English Dub omitido (país de habla inglesa: ${localOriginCountries.join(', ')})`);
-              } else {
-                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                logger.log(`✅ [CLIENT-PLAYER] English Dub agregado desde Vidify`);
-              }
-            }
-          } else {
-            logger.warn('⚠️ [CLIENT-PLAYER] Vidify (English Dub) falló');
-          }
-          
-          // 3. PROCESAR CUEVANA (Latino)
-          if (cuevanaRes.status === 'fulfilled' && cuevanaRes.value.ok) {
-            const cuevanaData = await cuevanaRes.value.json();
-            logger.log('📦 [CLIENT-PLAYER] Cuevana (Latino) datos:', cuevanaData);
-            
-            // Adaptando formato de Cuevana al formato de la app
-            if (cuevanaData.video && cuevanaData.video.url && cuevanaData.video.status === 'success') {
-              setCustomStreamUrl(cuevanaData.video.url);
-              logger.log(`✅ [CLIENT-PLAYER] Latino agregado desde Cuevana (${cuevanaData.video.player})`);
-            } else {
-              logger.warn('⚠️ [CLIENT-PLAYER] Cuevana no devolvió video válido');
-            }
-          } else {
-            logger.warn('⚠️ [CLIENT-PLAYER] Cuevana (Latino) falló');
-          }
-          
-          // Si Vidlink funcionó, salir (ya reproduciendo)
-          if (proxyRes.status === 'fulfilled' && proxyRes.value.ok) {
-            return;
-          }
-          
-          // 🔄 FALLBACK: Vidlink falló, intentar Vidify para TODOS los idiomas (incluye original)
-          logger.warn('⚠️ [CLIENT-PLAYER] Vidlink no devolvió stream, intentando Vidify para TODOS los idiomas...');
-          
-          const vidifyParams = new URLSearchParams({
-            type: normalizedType,
-            id: tmdbId.toString(),
-            includeOriginal: 'true', // Solicitar original también
+          const unifiedData = await fetchUnifiedStreams({
+            type: normalizedType as 'movie' | 'tv',
+            tmdbId,
+            season: seasonNum,
+            episode: episodeNum,
           });
-          if (isTv && seasonNum && episodeNum) {
-            vidifyParams.set('season', seasonNum.toString());
-            vidifyParams.set('episode', episodeNum.toString());
+
+          // Convertir al formato legacy de la app
+          const { original, latino, englishDub, metadata } = convertToLegacyFormat(unifiedData);
+
+          logger.log(`⏱️ [CLIENT-PLAYER] API unificada completada en ${metadata.totalTimeMs}ms`);
+          logger.log(`📊 [CLIENT-PLAYER] Streams obtenidos: ${metadata.successCount}/3`);
+          
+          if (metadata.isAnime) {
+            logger.log(`🎌 [CLIENT-PLAYER] Detectado como ANIME: ${metadata.animeTitle}`);
           }
-          
-          // Reusar vidifyUrl ya declarado arriba
-          const vidifyStartTime = Date.now();
-          const vidifyFallbackRes = await fetch(vidifyUrl);
-          const vidifyTime = Date.now() - vidifyStartTime;
-          
-          logger.log(`📡 [CLIENT-PLAYER] [FALLBACK] Vidify respuesta - status: ${vidifyFallbackRes.status}, tiempo: ${vidifyTime}ms`);
-          
-          if (vidifyFallbackRes.ok) {
-            const vidifyData = await vidifyFallbackRes.json();
-            logger.log('📦 [CLIENT-PLAYER] [FALLBACK] Vidify datos:', vidifyData);
+
+          let hasAnyStream = false;
+
+          // Helper: Detectar si es URL directa (necesita proxy de CORS)
+          const needsCorsProxy = (url: string) => {
+            return url.startsWith('https://') && !url.startsWith('/api/');
+          };
+
+          // 1. PROCESAR ORIGINAL (Vidlink o Anime SUB)
+          if (original?.playlistUrl) {
+            // Si es anime (URL directa), usar proxy de CORS
+            const streamUrl = needsCorsProxy(original.playlistUrl)
+              ? original.playlistUrl  // Para anime, ya viene la URL directa sin proxy
+              : original.playlistUrl;
             
-            let hasAnyStream = false;
+            setStreamUrl(streamUrl);
+            logger.log(`✅ [CLIENT-PLAYER] Stream Original desde ${original.source}${original.cached ? ' [CACHÉ]' : ''}`);
             
-            // Original
-            if (vidifyData.original?.streamUrl) {
-              setStreamUrl(vidifyData.original.streamUrl);
-              logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] Stream Original desde Vidify`);
-              if (vidifyData.original.subtitles && vidifyData.original.subtitles.length > 0) {
-                setExternalSubtitles(vidifyData.original.subtitles);
-              }
+            // Subtítulos - Mapear correctamente la estructura
+            if (original.subtitles && original.subtitles.length > 0) {
+              const mappedSubtitles = original.subtitles.map((sub: any) => ({
+                url: sub.url,
+                language: sub.lang || sub.language || 'unknown',
+                label: sub.label || sub.lang || 'Unknown',
+              }));
+              setExternalSubtitles(mappedSubtitles);
+              logger.log(`📝 [CLIENT-PLAYER] ${mappedSubtitles.length} subtítulos de ${original.source}`);
+            }
+            
+            hasAnyStream = true;
+          } else {
+            logger.warn('⚠️ [CLIENT-PLAYER] No hay stream Original disponible');
+            
+            // 🔄 FALLBACK: Si no hay Original, intentar usar Latino como principal
+            if (latino?.streamUrl) {
+              setStreamUrl(latino.streamUrl);
+              logger.log(`🔄 [CLIENT-PLAYER] Usando Latino como stream principal (fallback)`);
               hasAnyStream = true;
             }
-            
-            // English Dub
-            if (vidifyData.englishDub?.streamUrl) {
-              const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
-              if (!isEnglishOrigin) {
-                setEnglishDubStreamUrl(vidifyData.englishDub.streamUrl);
-                logger.log(`✅ [CLIENT-PLAYER] [FALLBACK] English Dub agregado`);
-                if (!hasAnyStream) hasAnyStream = true;
-              }
-            }
-            
-            // ⚠️ NOTA: Latino desde Cuevana ya fue intentado en el fetch paralelo principal
-            // No hacer fetch duplicado aquí
-            
-            if (hasAnyStream) {
-              setLoading(false);
-              playerLogger.log(`🎬 [WATCH] Vidify streams cargados (fallback desde Vidlink)`);
-              return; // Éxito con Vidify
-            }
           }
-          
-          logger.warn('⚠️ [CLIENT-PLAYER] Vidify tampoco devolvió streams, fallback a 111movies/GoFile...');
-        } catch (err) {
-          logger.error('❌ [CLIENT-PLAYER] Error en fetches paralelos:', err);
-        }
 
-        // 🔵 PRIORIDAD 2 (FALLBACK): Intentar 111movies
-        const params = new URLSearchParams({ type: normalizedType });
-        const finalImdbId = imdbIdLocal ?? (imdbId ?? undefined);
-        if (!finalImdbId) {
-          logger.warn(`No hay IMDb ID disponible para 111movies (tmdbId=${tmdbId}, type=${normalizedType})`);
-        } else {
-          params.set('id', finalImdbId);
-        }
-        if (isTv) {
-          if (seasonNum) params.set('season', seasonNum.toString());
-          if (episodeNum) params.set('episode', episodeNum.toString());
-        }
-
-        let startData: any = null;
-        if (params.get('id')) {
-          logger.log('🌐 [CLIENT-PLAYER] Intentando 111movies primero', {
-            params: params.toString(),
-          });
-          const startRes = await fetch(`/api/hls-browser-proxy/start?${params.toString()}`);
-          startData = await startRes.json();
-          logger.log('📡 [CLIENT-PLAYER] Respuesta del proxy', {
-            ok: startRes.ok,
-            hasPlaylistUrl: !!startData?.playlistUrl,
-            hasSubtitles: !!startData?.subtitles,
-            subtitlesCount: startData?.subtitles?.length || 0,
-            error: startData?.error,
-          });
-          if (startRes.ok && startData?.playlistUrl) {
-            logger.log('✅ [CLIENT-PLAYER] Stream exitoso, configurando streamUrl', {
-              playlistUrl: startData.playlistUrl,
-              source: startData?.source,
-            });
-            setStreamUrl(startData.playlistUrl);
+          // 2. PROCESAR ENGLISH DUB (Vidify o Anime DUB)
+          if (englishDub?.streamUrl) {
+            const isEnglishOrigin = isFromEnglishSpeakingCountry(localOriginCountries);
             
-            // Guardar subtítulos si hay
-            if (startData.subtitles && startData.subtitles.length > 0) {
-              logger.log(`📝 [CLIENT-PLAYER] ${startData.subtitles.length} subtítulos recibidos:`, startData.subtitles);
-              setExternalSubtitles(startData.subtitles);
+            if (isEnglishOrigin) {
+              logger.log(`🚫 [CLIENT-PLAYER] English Dub omitido (país de habla inglesa: ${localOriginCountries.join(', ')})`);
             } else {
-              logger.log(`⚠️ [CLIENT-PLAYER] No hay subtítulos en la respuesta`);
+              setEnglishDubStreamUrl(englishDub.streamUrl);
+              logger.log(`✅ [CLIENT-PLAYER] English Dub agregado desde ${englishDub.provider}${englishDub.cached ? ' [CACHÉ]' : ''}`);
+              hasAnyStream = true;
             }
-            
-            playerLogger.log(`🎬 [WATCH] Stream desde ${startData?.source || 'proxy'}: usando playlist local`);
+          } else {
+            logger.warn('⚠️ [CLIENT-PLAYER] No hay English Dub disponible');
+          }
+
+          // 3. PROCESAR LATINO (Cuevana)
+          // Solo agregar a customStreamUrl si NO se usó como stream principal
+          if (latino?.streamUrl && original?.playlistUrl) {
+            // Hay Original, entonces Latino va como alternativa
+            setCustomStreamUrl(latino.streamUrl);
+            logger.log(`✅ [CLIENT-PLAYER] Latino agregado desde ${latino.provider}${latino.cached ? ' [CACHÉ]' : ''}`);
+            hasAnyStream = true;
+          } else if (!latino?.streamUrl) {
+            logger.warn('⚠️ [CLIENT-PLAYER] No hay Latino disponible');
+          } else {
+            logger.log(`ℹ️ [CLIENT-PLAYER] Latino ya está como stream principal, no se agrega a customStreamUrl`);
+          }
+
+          // Si tenemos al menos un stream, iniciar reproducción
+          if (hasAnyStream) {
             setLoading(false);
-            logger.log('✅ [CLIENT-PLAYER] setLoading(false) - Stream URL configurada');
-            
-            // ⚠️ DESHABILITADO: Vidify ya devuelve los 3 idiomas (Original, English Dub, Latino)
-            // No necesitamos buscar latino por separado con /api/streams/unified
-            /*
-            // Intentar obtener stream latino en background
-            (async () => {
-              try {
-                logger.log('🌐 [CLIENT-PLAYER] Iniciando búsqueda de stream latino...');
-                const unifiedParams = new URLSearchParams({
-                  type: normalizedType,
-                  id: tmdbId.toString(),
-                });
-                if (isTv && seasonNum && episodeNum) {
-                  unifiedParams.set('season', seasonNum.toString());
-                  unifiedParams.set('episode', episodeNum.toString());
-                }
-                
-                const url = `/api/streams/unified?${unifiedParams.toString()}`;
-                logger.log(`🔗 [CLIENT-PLAYER] Llamando a: ${url}`);
-                
-                const unifiedRes = await fetch(url);
-                logger.log(`📡 [CLIENT-PLAYER] Respuesta recibida - status: ${unifiedRes.status}`);
-                
-                if (unifiedRes.ok) {
-                  const unifiedData = await unifiedRes.json();
-                  logger.log('📦 [CLIENT-PLAYER] Datos recibidos:', unifiedData);
-                  
-                  if (unifiedData.latino?.streamUrl) {
-                    logger.log('✅ [CLIENT-PLAYER] Stream latino encontrado:', unifiedData.latino.streamUrl);
-                    setCustomStreamUrl(unifiedData.latino.streamUrl);
-                  } else if (!unifiedData.latino?.unavailable) {
-                    // Si no está disponible pero tampoco marcado como unavailable, hacer polling
-                    logger.log('⏳ [CLIENT-PLAYER] Stream latino no disponible inmediatamente, iniciando polling...');
-                    let attempts = 0;
-                    const maxAttempts = 30; // 30 intentos = 2.5 minutos
-                    
-                    const pollInterval = setInterval(async () => {
-                      attempts++;
-                      if (attempts > maxAttempts) {
-                        clearInterval(pollInterval);
-                        logger.log('⏱️ [CLIENT-PLAYER] Polling detenido - tiempo máximo alcanzado');
-                        return;
-                      }
-                      
-                      try {
-                        const pollRes = await fetch(`/api/streams/unified?${unifiedParams.toString()}`);
-                        if (pollRes.ok) {
-                          const pollData = await pollRes.json();
-                          if (pollData.latino?.streamUrl) {
-                            logger.log(`✅ [CLIENT-PLAYER] Stream latino encontrado en intento ${attempts}`);
-                            setCustomStreamUrl(pollData.latino.streamUrl);
-                            clearInterval(pollInterval);
-                          } else if (pollData.latino?.unavailable) {
-                            logger.log('❌ [CLIENT-PLAYER] Stream latino marcado como unavailable');
-                            clearInterval(pollInterval);
-                          }
-                        }
-                      } catch (pollErr) {
-                        logger.warn('Error en polling de stream latino:', pollErr);
-                      }
-                    }, 5000); // Cada 5 segundos
-                  }
-                } else {
-                  logger.warn(`❌ [CLIENT-PLAYER] API respondió con error: ${unifiedRes.status}`);
-                }
-              } catch (latinoErr) {
-                logger.error('❌ [CLIENT-PLAYER] Error al obtener stream latino:', latinoErr);
-              }
-            })();
-            */
-            
-            return;
-          } else {
-            logger.warn('111movies falló, intentando GoFile...');
+            playerLogger.log(`🎬 [WATCH] Streams cargados desde API unificada, iniciando reproducción...`);
+            return; // ✅ Éxito
           }
-        }
 
-        // PRIORIDAD 2: Verificar si hay archivos GoFile disponibles
-        let files: DownloadedFile[] = [];
-        try {
-          if (isTv && seasonNum && episodeNum) {
-            files = await getEpisodeFiles(tmdbId, seasonNum, episodeNum);
-          } else {
-            files = await getMovieFiles(tmdbId);
-          }
-        } catch (fileErr) {
-          logger.warn('Fallo al obtener archivos descargados:', fileErr);
-        }
-
-        if (files.length > 0) {
-          const file = files[0];
-          logger.log('✅ [CLIENT-PLAYER] Archivo GoFile encontrado', {
-            fileName: file.fileName,
-            hasGofileUrl: !!file.gofileUrl,
-            hasGofileDirectUrl: !!file.gofileDirectUrl,
-          });
-          setSelectedFile(file);
-          setGoFileUrl(file.gofileDirectUrl || file.gofileUrl);
-          await updateLastAccessed(file.id).catch(() => {});
-          playerLogger.log(`🎬 [WATCH] GoFile: ${file.fileName}`);
+          logger.error('❌ [CLIENT-PLAYER] API unificada no devolvió ningún stream válido');
           setLoading(false);
-          logger.log('✅ [CLIENT-PLAYER] setLoading(false) - GoFile URL configurada');
-          
-          // Intentar obtener stream latino en background (mismo código que arriba)
-          (async () => {
-            try {
-              logger.log('🌐 [CLIENT-PLAYER] Iniciando búsqueda de stream latino (GoFile)...');
-              const unifiedParams = new URLSearchParams({
-                type: normalizedType,
-                id: tmdbId.toString(),
-              });
-              if (isTv && seasonNum && episodeNum) {
-                unifiedParams.set('season', seasonNum.toString());
-                unifiedParams.set('episode', episodeNum.toString());
-              }
-              
-              const url = `/api/streams/unified?${unifiedParams.toString()}`;
-              logger.log(`🔗 [CLIENT-PLAYER] Llamando a: ${url}`);
-              
-              const unifiedRes = await fetch(url);
-              logger.log(`📡 [CLIENT-PLAYER] Respuesta recibida - status: ${unifiedRes.status}`);
-              
-              if (unifiedRes.ok) {
-                const unifiedData = await unifiedRes.json();
-                logger.log('📦 [CLIENT-PLAYER] Datos recibidos:', unifiedData);
-                
-                if (unifiedData.latino?.streamUrl) {
-                  logger.log('✅ [CLIENT-PLAYER] Stream latino encontrado:', unifiedData.latino.streamUrl);
-                  setCustomStreamUrl(unifiedData.latino.streamUrl);
-                } else if (!unifiedData.latino?.unavailable) {
-                  // Si no está disponible pero tampoco marcado como unavailable, hacer polling
-                  logger.log('⏳ [CLIENT-PLAYER] Stream latino no disponible inmediatamente, iniciando polling...');
-                  let attempts = 0;
-                  const maxAttempts = 30; // 30 intentos = 2.5 minutos
-                  
-                  const pollInterval = setInterval(async () => {
-                    attempts++;
-                    if (attempts > maxAttempts) {
-                      clearInterval(pollInterval);
-                      logger.log('⏱️ [CLIENT-PLAYER] Polling detenido - tiempo máximo alcanzado');
-                      return;
-                    }
-                    
-                    try {
-                      const pollRes = await fetch(`/api/streams/unified?${unifiedParams.toString()}`);
-                      if (pollRes.ok) {
-                        const pollData = await pollRes.json();
-                        if (pollData.latino?.streamUrl) {
-                          logger.log(`✅ [CLIENT-PLAYER] Stream latino encontrado en intento ${attempts}`);
-                          setCustomStreamUrl(pollData.latino.streamUrl);
-                          clearInterval(pollInterval);
-                        } else if (pollData.latino?.unavailable) {
-                          logger.log('❌ [CLIENT-PLAYER] Stream latino marcado como unavailable');
-                          clearInterval(pollInterval);
-                        }
-                      }
-                    } catch (pollErr) {
-                      logger.warn('Error en polling de stream latino:', pollErr);
-                    }
-                  }, 5000); // Cada 5 segundos
-                }
-              } else {
-                logger.warn(`❌ [CLIENT-PLAYER] API respondió con error: ${unifiedRes.status}`);
-              }
-            } catch (latinoErr) {
-              logger.error('❌ [CLIENT-PLAYER] Error al obtener stream latino:', latinoErr);
-            }
-          })();
-          
+          setError('No se encontraron streams disponibles para este contenido');
+          return;
+        } catch (err) {
+          logger.error('❌ [CLIENT-PLAYER] Error llamando a API unificada:', err);
+          setLoading(false);
+          setError('Error al obtener streams: ' + (err instanceof Error ? err.message : 'Unknown'));
           return;
         }
 
-        // PRIORIDAD 3: Error - no hay ninguna fuente disponible
-        setError(startData?.error || 'No se encontró ninguna fuente disponible');
-        setLoading(false);
+        // 🚫 NO HAY FALLBACK - Solo API unificada
+        // El error ya se mostró arriba
       } catch (err: any) {
         logger.error('Error en /watch:', err);
         setError(err?.message || 'Error al preparar reproducción');
@@ -875,4 +586,4 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
       )}
     </div>
   );
-}
+}// 2025-12-26 10:02:59
