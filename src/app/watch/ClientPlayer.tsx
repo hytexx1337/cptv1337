@@ -350,10 +350,12 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
         
         let cuevanaUrl = '';
         if (tmdbId) {
+          // Usar variable de entorno o fallback a subdomain con SSL
+          const cuevanaApiBase = process.env.NEXT_PUBLIC_CUEVANA_API_URL || 'https://api.cineparatodos.lat';
           if (isTv && seasonNum && episodeNum) {
-            cuevanaUrl = `http://72.60.251.132:3000/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
+            cuevanaUrl = `${cuevanaApiBase}/fast/tv/${tmdbId}/${seasonNum}/${episodeNum}`;
           } else {
-            cuevanaUrl = `http://72.60.251.132:3000/fast/movie/${tmdbId}`;
+            cuevanaUrl = `${cuevanaApiBase}/fast/movie/${tmdbId}`;
           }
         }
         
