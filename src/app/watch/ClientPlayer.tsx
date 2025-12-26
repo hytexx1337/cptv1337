@@ -344,6 +344,7 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
           }
 
           let hasAnyStream = false;
+          let streamCount = 0;
 
           // Helper: Detectar si es URL directa (necesita proxy de CORS)
           const needsCorsProxy = (url: string) => {
@@ -372,6 +373,7 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
             }
             
             hasAnyStream = true;
+            streamCount++;
           } else {
             logger.warn('⚠️ [CLIENT-PLAYER] No hay stream Original disponible');
             
@@ -380,6 +382,7 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
               setStreamUrl(latino.streamUrl);
               logger.log(`🔄 [CLIENT-PLAYER] Usando Latino como stream principal (fallback)`);
               hasAnyStream = true;
+              streamCount++;
             }
           }
 
@@ -392,10 +395,11 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
             } else {
               setEnglishDubStreamUrl(englishDub.streamUrl);
               logger.log(`✅ [CLIENT-PLAYER] English Dub agregado desde ${englishDub.provider}${englishDub.cached ? ' [CACHÉ]' : ''}`);
-              hasAnyStream = true;
+              streamCount++;
+              // No afecta hasAnyStream porque es stream adicional, no principal
             }
           } else {
-            logger.warn('⚠️ [CLIENT-PLAYER] No hay English Dub disponible');
+            logger.log('ℹ️ [CLIENT-PLAYER] English Dub no disponible');
           }
 
           // 3. PROCESAR LATINO (Cuevana)
@@ -404,12 +408,15 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
             // Hay Original, entonces Latino va como alternativa
             setCustomStreamUrl(latino.streamUrl);
             logger.log(`✅ [CLIENT-PLAYER] Latino agregado desde ${latino.provider}${latino.cached ? ' [CACHÉ]' : ''}`);
-            hasAnyStream = true;
+            streamCount++;
+            // No afecta hasAnyStream porque es stream adicional, no principal
           } else if (!latino?.streamUrl) {
-            logger.warn('⚠️ [CLIENT-PLAYER] No hay Latino disponible');
+            logger.log('ℹ️ [CLIENT-PLAYER] Latino no disponible');
           } else {
             logger.log(`ℹ️ [CLIENT-PLAYER] Latino ya está como stream principal, no se agrega a customStreamUrl`);
           }
+
+          logger.log(`📊 [CLIENT-PLAYER] Resumen: ${streamCount} streams disponibles (al menos 1 principal: ${hasAnyStream})`);
 
           // Si tenemos al menos un stream, iniciar reproducción
           if (hasAnyStream) {
