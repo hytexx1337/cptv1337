@@ -131,6 +131,18 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
     };
   }, []);
 
+  // Actualizar título de la pestaña del navegador
+  useEffect(() => {
+    if (title) {
+      // Para series, el título ya incluye "S1E1", no lo duplicamos
+      const pageTitle = `${title} | CineParaTodos`;
+      document.title = pageTitle;
+      logger.log('📄 [CLIENT-PLAYER] Título actualizado:', pageTitle);
+    } else {
+      document.title = 'CineParaTodos';
+    }
+  }, [title]);
+
   useEffect(() => {
     // Generar clave única para esta combinación de parámetros
     const currentKey = `${normalizedType}-${tmdbId}-${seasonNum}-${episodeNum}`;

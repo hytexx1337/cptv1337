@@ -251,7 +251,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
     // Recalcular posición al cambiar tamaño de ventana o fullscreen
     window.addEventListener('resize', calculateMenuPosition);
     
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: Event) => {
       const target = e.target as HTMLElement;
       const isAudioButton = target.closest('.vjs-audio-selector-button');
       const isAudioMenu = target.closest('[data-audio-menu]');
@@ -263,39 +263,25 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
         targetClass: target.className
       });
       
-      // Cerrar si el click NO es en el botón de audio ni en el menú
-      if (!isAudioButton && !isAudioMenu) {
-        logger.log('🎧 [AUDIO-MENU] ❌ Cerrando menú (click outside)');
-        setShowAudioMenu(false);
+      // Si es el menú o el botón, NO hacer nada (dejar que el onClick del botón se ejecute)
+      if (isAudioButton || isAudioMenu) {
+        logger.log('🎧 [AUDIO-MENU] ✅ Click dentro del menú, permitiendo ejecución del onClick');
+        return;
       }
+      
+      // Cerrar si el click NO es en el botón de audio ni en el menú
+      logger.log('🎧 [AUDIO-MENU] ❌ Cerrando menú (click outside)');
+      setShowAudioMenu(false);
     };
 
-    // Agregar listener al document Y al video element
-    const videoElement = document.querySelector('.video-js video');
-    const playerElement = document.querySelector('.video-js');
-    
+    // Agregar listener SOLO al document (en capture phase para interceptar antes que Video.js)
     setTimeout(() => {
-      document.addEventListener('click', handleClickOutside, true); // 🆕 true = capture phase
-      if (videoElement) {
-        videoElement.addEventListener('click', handleClickOutside, true);
-        logger.log('🎧 [AUDIO-MENU] ✅ Listener agregado al video element');
-      }
-      if (playerElement) {
-        playerElement.addEventListener('click', handleClickOutside, true);
-        logger.log('🎧 [AUDIO-MENU] ✅ Listener agregado al player element');
-      }
-      logger.log('🎧 [AUDIO-MENU] ✅ Listener de click outside agregado');
+      document.addEventListener('click', handleClickOutside, true);
+      logger.log('🎧 [AUDIO-MENU] ✅ Listener de click outside agregado al document');
     }, 100);
 
     return () => {
       document.removeEventListener('click', handleClickOutside, true);
-      if (videoElement) {
-        videoElement.removeEventListener('click', handleClickOutside, true);
-      }
-      if (playerElement) {
-        playerElement.removeEventListener('click', handleClickOutside, true);
-      }
-      window.removeEventListener('resize', calculateMenuPosition);
       logger.log('🎧 [AUDIO-MENU] 🗑️ Listeners removidos');
     };
   }, [showAudioMenu, isFullscreen]); // 🆕 Añadir isFullscreen como dependencia
@@ -1759,7 +1745,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   position: 'fixed',
                   bottom: `${audioMenuPosition.bottom}px`,
                   right: `${audioMenuPosition.right}px`,
-                  zIndex: 99999,
+                  zIndex: 2147483647, // Máximo z-index posible
                   pointerEvents: 'auto'
                 }}
                 onClick={(e) => {
@@ -1785,14 +1771,24 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   overflow: 'hidden',
                   boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                   border: '1px solid rgba(75, 85, 99, 0.5)',
-                  minWidth: '180px'
+                  minWidth: '180px',
+                  pointerEvents: 'auto'
                 }}>
                   {/* ORIGINAL */}
                   <button
-                    onClick={(e) => {
+                    onMouseDown={(e) => {
                       e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
                       e.preventDefault();
-                      logger.log('🎧 [AUDIO-MENU] Click en botón ORIGINAL');
+                      logger.log('🎧 [AUDIO-MENU] MouseDown en botón ORIGINAL (bloqueando Video.js)');
+                    }}
+                    onMouseUp={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                      e.preventDefault();
+                      logger.log('🎧 [AUDIO-MENU] MouseUp en botón ORIGINAL');
+                      
+                      // Ejecutar cambio de audio aquí
                       if (selectedAudio !== 'original') {
                         // Guardar posición actual
                         if (playerRef.current) {
@@ -1832,7 +1828,8 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       cursor: 'pointer',
                       transition: 'all 0.15s',
                       backgroundColor: selectedAudio === 'original' ? '#374151' : 'transparent',
-                      color: selectedAudio === 'original' ? 'white' : '#d1d5db'
+                      color: selectedAudio === 'original' ? 'white' : '#d1d5db',
+                      pointerEvents: 'auto'
                     }}
                     onMouseEnter={(e) => {
                       if (selectedAudio !== 'original') {
@@ -1868,10 +1865,19 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   {/* ENGLISH DUB */}
                   {englishDubStreamUrl && (
                     <button
-                      onClick={(e) => {
+                      onMouseDown={(e) => {
                         e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
                         e.preventDefault();
-                        logger.log('🎧 [AUDIO-MENU] Click en botón ENGLISH');
+                        logger.log('🎧 [AUDIO-MENU] MouseDown en botón ENGLISH (bloqueando Video.js)');
+                      }}
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
+                        e.preventDefault();
+                        logger.log('🎧 [AUDIO-MENU] MouseUp en botón ENGLISH');
+                        
+                        // Ejecutar cambio de audio aquí
                         if (selectedAudio !== 'englishDub') {
                           // Guardar posición actual
                           if (playerRef.current) {
@@ -1912,7 +1918,8 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         cursor: 'pointer',
                         transition: 'all 0.15s',
                         backgroundColor: selectedAudio === 'englishDub' ? '#374151' : 'transparent',
-                        color: selectedAudio === 'englishDub' ? 'white' : '#d1d5db'
+                        color: selectedAudio === 'englishDub' ? 'white' : '#d1d5db',
+                        pointerEvents: 'auto'
                       }}
                       onMouseEnter={(e) => {
                         if (selectedAudio !== 'englishDub') {
@@ -1946,10 +1953,19 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   {/* LATINO */}
                   {customStreamUrl && (
                     <button
-                      onClick={(e) => {
+                      onMouseDown={(e) => {
                         e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
                         e.preventDefault();
-                        logger.log('🎧 [AUDIO-MENU] Click en botón LATINO');
+                        logger.log('🎧 [AUDIO-MENU] MouseDown en botón LATINO (bloqueando Video.js)');
+                      }}
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
+                        e.preventDefault();
+                        logger.log('🎧 [AUDIO-MENU] MouseUp en botón LATINO');
+                        
+                        // Ejecutar cambio de audio aquí
                         if (selectedAudio !== 'latino') {
                           // Guardar posición actual
                           if (playerRef.current) {
@@ -1990,7 +2006,8 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         cursor: 'pointer',
                         transition: 'all 0.15s',
                         backgroundColor: selectedAudio === 'latino' ? '#374151' : 'transparent',
-                        color: selectedAudio === 'latino' ? 'white' : '#d1d5db'
+                        color: selectedAudio === 'latino' ? 'white' : '#d1d5db',
+                        pointerEvents: 'auto'
                       }}
                       onMouseEnter={(e) => {
                         if (selectedAudio !== 'latino') {
@@ -2022,7 +2039,9 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   )}
                 </div>
               </div>,
-              document.body
+              isFullscreen 
+                ? (document.querySelector('.video-js.vjs-fullscreen') || document.body)
+                : document.body
             )}
 
             {/* Next Up Overlay - créditos o últimos 10 segundos */}
