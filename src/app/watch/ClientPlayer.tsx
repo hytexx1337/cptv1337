@@ -110,7 +110,8 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
     year,
     rating,
     overview,
-  }), [tmdbId, title, imdbId, isTv, seasonNum, episodeNum, backdropPath, logoPath, year, rating, overview]);
+    originCountries, // 🆕 Países de origen para determinar idioma original
+  }), [tmdbId, title, imdbId, isTv, seasonNum, episodeNum, backdropPath, logoPath, year, rating, overview, originCountries]);
 
   // Memoizar tvMetadata para evitar re-renders innecesarios
   const memoizedTvMetadata = useMemo(() => 

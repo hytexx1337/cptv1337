@@ -17,6 +17,43 @@ import { streamLogger, subtitleLogger, logger } from '@/lib/logger';
 import { watchHistory } from '@/lib/watch-history';
 import io, { Socket } from 'socket.io-client';
 
+// Helper para determinar idioma original y bandera según país de origen
+const getOriginalLanguageInfo = (originCountries?: string[]) => {
+  const firstCountry = originCountries?.[0];
+  
+  // Japón -> Japonés
+  if (firstCountry === 'JP') {
+    return { flag: '🇯🇵', label: 'ORIGINAL' };
+  }
+  // Korea -> Coreano
+  if (firstCountry === 'KR') {
+    return { flag: '🇰🇷', label: 'ORIGINAL' };
+  }
+  // USA/UK/CA/AU -> Inglés
+  if (['US', 'GB', 'CA', 'AU'].includes(firstCountry || '')) {
+    return { flag: '🇺🇸', label: 'ORIGINAL' };
+  }
+  // España/Latinoamérica -> Español
+  if (['ES', 'MX', 'AR', 'CO', 'CL'].includes(firstCountry || '')) {
+    return { flag: '🇪🇸', label: 'ORIGINAL' };
+  }
+  // Francia -> Francés
+  if (firstCountry === 'FR') {
+    return { flag: '🇫🇷', label: 'ORIGINAL' };
+  }
+  // China -> Chino
+  if (firstCountry === 'CN') {
+    return { flag: '🇨🇳', label: 'ORIGINAL' };
+  }
+  // India -> Hindi
+  if (firstCountry === 'IN') {
+    return { flag: '🇮🇳', label: 'ORIGINAL' };
+  }
+  
+  // Por defecto (desconocido)
+  return { flag: '🌍', label: 'ORIGINAL' };
+};
+
   interface StreamingPlayerProps {
     magnetUri?: string;
     goFileUrl?: string;
@@ -45,6 +82,7 @@ import io, { Socket } from 'socket.io-client';
     year?: number | string; // Año de lanzamiento
     rating?: number; // Puntaje (0-10)
     overview?: string; // Sinopsis
+    originCountries?: string[]; // 🆕 Países de origen para determinar idioma original
     };
     tvMetadata?: {
       tmdbId?: string | number;
@@ -1661,10 +1699,10 @@ import io, { Socket } from 'socket.io-client';
             )}
 
             {/* Menú de selección de audio (aparece arriba del botón de audio) */}
-            {(customStreamUrl || englishDubStreamUrl) && showAudioMenu && (
+            {(customStreamUrl || englishDubStreamUrl) && showAudioMenu && createPortal(
               <div 
                 data-audio-menu
-                className="absolute z-[200]"
+                className="fixed z-[9999]"
                 style={{
                   bottom: `${audioMenuPosition.bottom}px`,
                   right: `${audioMenuPosition.right}px`
@@ -1702,7 +1740,10 @@ import io, { Socket } from 'socket.io-client';
                       selectedAudio === 'original' ? 'text-white bg-white/10' : 'text-white/80'
                     }`}
                   >
-                    Original
+                    <span className="flex items-center gap-2">
+                      <span className="text-2xl">{getOriginalLanguageInfo(movieMetadata?.originCountries).flag}</span>
+                      <span>{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
+                    </span>
                   </button>
                   
                   {englishDubStreamUrl && (
@@ -1737,7 +1778,10 @@ import io, { Socket } from 'socket.io-client';
                         selectedAudio === 'englishDub' ? 'text-white bg-white/10' : 'text-white/80'
                       }`}
                     >
-                      English Dub
+                      <span className="flex items-center gap-2">
+                        <span className="text-2xl">🇺🇸</span>
+                        <span>ENGLISH</span>
+                      </span>
                     </button>
                   )}
                   
@@ -1773,11 +1817,15 @@ import io, { Socket } from 'socket.io-client';
                         selectedAudio === 'latino' ? 'text-white bg-white/10' : 'text-white/80'
                       }`}
                     >
-                      Latino
+                      <span className="flex items-center gap-2">
+                        <span className="text-2xl">🇲🇽</span>
+                        <span>LATINO</span>
+                      </span>
                     </button>
                   )}
                 </div>
-              </div>
+              </div>,
+              document.querySelector('.video-js') || document.body
             )}
 
             {/* Next Up Overlay - créditos o últimos 10 segundos */}
