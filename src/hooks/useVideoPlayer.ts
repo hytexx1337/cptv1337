@@ -3613,9 +3613,9 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                     return streamUrl as string;
                   }
                   // Envolver solo si es HLS externo absoluto y está habilitado el viejo proxy
-                  // PERO excluir URLs del VPS Vidlink y Cloudflare Workers
+                  // PERO excluir URLs del VPS Vidlink, Cloudflare Workers y proxies locales
                   if (USE_HLS_PROXY && videoType === 'application/x-mpegURL' && typeof BASE_STREAM_URL === 'string' && /^https?:\/\//i.test(BASE_STREAM_URL)) {
-                    // NO aplicar proxy a URLs del VPS Vidlink (81.17.102.98:8787) ni Cloudflare Workers (*.workers.dev)
+                    // NO aplicar proxy a URLs del VPS Vidlink (81.17.102.98:8787), Cloudflare Workers (*.workers.dev) ni proxies locales (/api/*)
                     if (!/81\.17\.102\.98:8787/i.test(BASE_STREAM_URL) && !/\.workers\.dev/i.test(BASE_STREAM_URL)) {
                       console.log('🔧 [PROXY-DEBUG] Aplicando cors-proxy a:', BASE_STREAM_URL.substring(0, 60));
                       let origin = '';
@@ -3626,6 +3626,11 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                     } else {
                       console.log('✅ [PROXY-DEBUG] VPS/Worker detectado, SIN proxy:', BASE_STREAM_URL.substring(0, 60));
                     }
+                  }
+                  // Si es una URL relativa (empieza con /api/), devolverla tal cual
+                  if (typeof BASE_STREAM_URL === 'string' && BASE_STREAM_URL.startsWith('/api/')) {
+                    console.log('✅ [PROXY-DEBUG] Proxy local detectado (/api/), SIN re-proxy:', BASE_STREAM_URL.substring(0, 60));
+                    return BASE_STREAM_URL;
                   }
                   console.log('🎯 [PROXY-DEBUG] Usando streamUrl directo:', (streamUrl as string)?.substring(0, 60));
                   return streamUrl as string;
