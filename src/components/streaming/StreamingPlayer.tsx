@@ -1744,7 +1744,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                     }`}
                   >
                     <img 
-                      src={`https://flagcdn.com/w40/${getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode}.png`}
+                      src={`/flags/${getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode}.png`}
                       alt="Flag"
                       className="w-8 h-6 object-cover rounded shadow-md"
                       onError={(e) => {
@@ -1791,7 +1791,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       }`}
                     >
                       <img 
-                        src="https://flagcdn.com/w40/us.png"
+                        src="/flags/us.png"
                         alt="USA Flag"
                         className="w-8 h-6 object-cover rounded shadow-md"
                       />
@@ -1835,7 +1835,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       }`}
                     >
                       <img 
-                        src="https://flagcdn.com/w40/mx.png"
+                        src="/flags/mx.png"
                         alt="Mexico Flag"
                         className="w-8 h-6 object-cover rounded shadow-md"
                       />
