@@ -282,6 +282,10 @@ export async function GET(req: NextRequest) {
         if (match && match[2]) {
           try {
             const uriValue = match[2];
+            // NO reescribir si ya es un proxy local (/api/*)
+            if (uriValue.startsWith('/api/')) {
+              return line;
+            }
             const absoluteUrl = uriValue.startsWith('http') 
               ? uriValue 
               : new URL(uriValue, baseUrl).toString();
@@ -305,6 +309,10 @@ export async function GET(req: NextRequest) {
 
         // Reescribir URLs de segmentos/playlists
         try {
+          // NO reescribir si ya es un proxy local (/api/*)
+          if (line.startsWith('/api/')) {
+            return line;
+          }
           const absoluteUrl = line.startsWith('http') 
             ? line 
             : new URL(line, baseUrl).toString();
@@ -384,6 +392,10 @@ export async function GET(req: NextRequest) {
           if (match && match[2]) {
             try {
               const uriValue = match[2];
+              // NO reescribir si ya es un proxy local (/api/*)
+              if (uriValue.startsWith('/api/')) {
+                return line;
+              }
               const absoluteUrl = uriValue.startsWith('http') 
                 ? uriValue 
                 : new URL(uriValue, baseUrl).toString();
@@ -406,6 +418,11 @@ export async function GET(req: NextRequest) {
             continue;
           }
           try {
+            // NO reescribir si ya es un proxy local (/api/*)
+            if (line.startsWith('/api/')) {
+              rewritten.push(line);
+              continue;
+            }
             const absoluteUrl = line.startsWith('http') 
               ? line 
               : new URL(line, baseUrl).toString();
