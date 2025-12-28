@@ -77,6 +77,11 @@ export function validateUrl(url: unknown, allowPrivate = false): string {
     throw new Error('URL must be a string');
   }
   
+  // ✅ URLs relativas (empiezan con /) se permiten directamente (APIs locales)
+  if (url.startsWith('/')) {
+    return url;
+  }
+  
   let parsed: URL;
   try {
     parsed = new URL(url);
