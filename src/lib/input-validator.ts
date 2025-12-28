@@ -93,6 +93,16 @@ export function validateUrl(url: unknown, allowPrivate = false): string {
   if (!allowPrivate) {
     const hostname = parsed.hostname.toLowerCase();
     
+    // ✅ EXCEPCIÓN ESPECIAL: VPS Vidlink (81.17.102.98:8787)
+    if (hostname === '81.17.102.98') {
+      return url; // VPS de Vidlink permitido
+    }
+    
+    // ✅ EXCEPCIÓN ESPECIAL: Cloudflare Workers (*.workers.dev)
+    if (hostname.endsWith('.workers.dev')) {
+      return url; // Cloudflare Workers permitidos (ya tienen CORS)
+    }
+    
     // Bloquear localhost y IPs privadas
     if (BLOCKED_IPS.includes(hostname)) {
       throw new Error('Access to localhost/private IPs is blocked');
@@ -128,7 +138,8 @@ export function validateUrl(url: unknown, allowPrivate = false): string {
       '.mkv',       // Video
       '.aac',       // Audio
       '.mp3',       // Audio
-      '.woff2',     // Segmentos disfrazados (Cuevana)
+      '.woff',      // Segmentos disfrazados (Vidify init segments)
+      '.woff2',     // Segmentos disfrazados (Cuevana/Vidify)
       '.mpd',       // DASH manifest
       '.vtt',       // WebVTT subtitles
       '.srt',       // SRT subtitles

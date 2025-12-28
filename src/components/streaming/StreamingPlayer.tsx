@@ -364,15 +364,24 @@ import io, { Socket } from 'socket.io-client';
     if (!url) return undefined;
     
     // Si ya está proxificado (cualquier tipo de proxy), devolver tal cual
-    if (url.startsWith('/api/cors-proxy') || url.startsWith('/api/vidify-proxy') || url.startsWith('/api/hls-browser-proxy')) {
+    if (url.startsWith('/api/cors-proxy') || url.startsWith('/api/vidify-proxy') || url.startsWith('/api/vidlink-proxy') || url.startsWith('/api/hls-browser-proxy') || url.startsWith('http://localhost:8080')) {
       return url;
     }
     
     // Si es una URL externa, wrappearla con el proxy correcto
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
-        // 🔍 Detectar si es un stream de Cuevana (o dominios conocidos de players)
         const hostname = new URL(url).hostname.toLowerCase();
+        
+        // 🔥 VIDLINK: Usar proxy standalone local (puerto 8080)
+        if (hostname.includes('vodvidl.site') || hostname.includes('vidlink.pro') || 
+            hostname.includes('frostveil') || hostname.includes('rainflare') || 
+            hostname.includes('cloudspark') || hostname.includes('.live')) {
+          logger.log(`🎬 [PROXY] Usando vidlink-proxy-server.mjs (8080): ${hostname}`);
+          return `http://localhost:8080/proxy?url=${encodeURIComponent(url)}`;
+        }
+        
+        // 🔍 Detectar si es un stream de Cuevana (o dominios conocidos de players)
         const isCuevanaPlayer = hostname.includes('embed69') || 
                                 hostname.includes('xupalace') || 
                                 hostname.includes('kinej') ||
@@ -1288,44 +1297,9 @@ import io, { Socket } from 'socket.io-client';
       
       logger.log('✅ [EXTERNAL-SUBS] Subtítulos externos agregados');
       
-      // Función para mantener SOLO el español activo
-      const enforceSpanishOnly = () => {
-        if (!playerRef.current || labelToActivate.length === 0) return;
-        
-        const tracks = playerRef.current.textTracks() as any;
-        let spanishTrackFound = false;
-        
-        // Recorrer todos los tracks
-        for (let i = 0; i < tracks.length; i++) {
-          if (tracks[i].kind === 'subtitles' || tracks[i].kind === 'captions') {
-            // Si es el primer español que encontramos, activarlo
-            if (!spanishTrackFound && tracks[i].label === labelToActivate[0]) {
-              if (tracks[i].mode !== 'showing') {
-                tracks[i].mode = 'showing';
-                logger.log(`✅ [ENFORCE-SPANISH] Activando: ${tracks[i].label}`);
-              }
-              spanishTrackFound = true;
-            } 
-            // Si es cualquier otro track, desactivarlo
-            else if (tracks[i].mode === 'showing') {
-              tracks[i].mode = 'disabled';
-              logger.log(`🔒 [ENFORCE-SPANISH] Desactivando: ${tracks[i].label}`);
-            }
-          }
-        }
-      };
-
-      // Ejecutar inmediatamente
-      setTimeout(enforceSpanishOnly, 1000);
-      
-      // Y luego monitorear constantemente por si se agregan más subtítulos
-      const intervalId = setInterval(enforceSpanishOnly, 500);
-      
-      // Limpiar después de 10 segundos (cuando ya se cargaron todos los subtítulos)
-      setTimeout(() => {
-        clearInterval(intervalId);
-        logger.log(`✅ [ENFORCE-SPANISH] Monitor detenido`);
-      }, 10000);
+      // ⚠️ DESACTIVADO: enforceSpanishOnly causa conflictos con ASS
+      // El subtítulo español ASS ya se activa automáticamente más arriba
+      // No necesitamos forzar la activación de VTT español
     }, 2000); // 2 segundos de delay para no bloquear la reproducción
     
     return () => {
@@ -1438,14 +1412,15 @@ import io, { Socket } from 'socket.io-client';
           const assContent = (subtitle as any).assContent;
           
           if (playerRef.current && assContent) {
-            // Crear un VTT vacío/dummy para que Video.js no intente parsear el ASS
-            const dummyVTT = 'WEBVTT\n\n';
+            // Crear un VTT con un cue invisible para que Video.js lo considere válido
+            // pero no interfiera con el renderizado de SubtitlesOctopus
+            const dummyVTT = 'WEBVTT\n\n00:00:00.000 --> 00:00:00.001\n<v Dummy></v>\n\n';
             const dummyBlob = new Blob([dummyVTT], { type: 'text/vtt' });
             const dummyUrl = URL.createObjectURL(dummyBlob);
             
             const track = playerRef.current.addRemoteTextTrack({
               kind: 'subtitles', // Usar 'subtitles' para que aparezca en el menú
-              src: dummyUrl, // VTT vacío para que Video.js no arroje error
+              src: dummyUrl, // VTT con cue invisible
               srclang: subtitle.language,
               label: label,
               default: false,

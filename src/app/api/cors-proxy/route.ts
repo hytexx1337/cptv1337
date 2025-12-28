@@ -167,8 +167,26 @@ export async function GET(req: NextRequest) {
 
   let upstream: Response;
   try {
-    upstream = await fetch(target, { headers, redirect: 'follow' });
+    // ⏱️ TIMEOUT 10s: Si tarda más, el fetch se cancela y hace retry más rápido
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    upstream = await fetch(target, { 
+      headers, 
+      redirect: 'follow',
+      signal: controller.signal 
+    });
+    
+    clearTimeout(timeoutId);
   } catch (e) {
+    const error = e as Error;
+    if (error.name === 'AbortError') {
+      console.log(`⏰ [CORS-PROXY] Timeout 10s: ${target.substring(0, 100)}...`);
+      return new Response(JSON.stringify({ error: 'Request timeout after 10s' }), {
+        status: 504,
+        headers: corsHeaders({ 'content-type': 'application/json' }),
+      });
+    }
     return new Response(JSON.stringify({ error: 'Upstream fetch failed' }), {
       status: 502,
       headers: corsHeaders({ 'content-type': 'application/json' }),
@@ -177,18 +195,32 @@ export async function GET(req: NextRequest) {
 
   // Si el upstream rechaza por política (403/401/405), hacer una cascada de reintentos
   if (!upstream.ok && (upstream.status === 403 || upstream.status === 401 || upstream.status === 405)) {
+    // Helper function para fetch con timeout
+    const fetchWithTimeout = async (url: string, headers: Record<string, string>, timeoutMs: number = 10000): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { headers, redirect: 'follow', signal: controller.signal });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+      }
+    };
+
     // 1) Sin Referer/Origin
     const retry1: Record<string, string> = { ...headers };
     delete retry1['referer'];
     delete retry1['origin'];
-    try { upstream = await fetch(target, { headers: retry1, redirect: 'follow' }); } catch {}
+    try { upstream = await fetchWithTimeout(target, retry1); } catch {}
 
     // 2) Accept más permisivo y sin compression
     if (!upstream.ok) {
       const retry2: Record<string, string> = { ...retry1 };
       retry2['accept'] = '*/*';
       delete retry2['accept-encoding'];
-      try { upstream = await fetch(target, { headers: retry2, redirect: 'follow' }); } catch {}
+      try { upstream = await fetchWithTimeout(target, retry2); } catch {}
     }
 
     // 3) Forzar Referer proporcionado aunque no coincida host (si ref viene)
@@ -198,7 +230,7 @@ export async function GET(req: NextRequest) {
         const retry3: Record<string, string> = { ...headers };
         retry3['referer'] = refUrl.origin + '/';
         retry3['origin'] = refUrl.origin;
-        try { upstream = await fetch(target, { headers: retry3, redirect: 'follow' }); } catch {}
+        try { upstream = await fetchWithTimeout(target, retry3); } catch {}
       } catch {}
     }
   }
@@ -400,7 +432,6 @@ export async function GET(req: NextRequest) {
       }
     }
   }
-
   return new Response(upstream.body, {
     status: upstream.ok ? 200 : upstream.status,
     headers: respHeaders,

@@ -72,6 +72,10 @@ export async function GET(req: NextRequest) {
   const season = searchParams.get('season');
   const episode = searchParams.get('episode');
   const language = searchParams.get('language');
+  
+  // 🆕 Headers opcionales desde el scraper
+  const customReferer = searchParams.get('referer');
+  const customOrigin = searchParams.get('origin');
 
   if (!url) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
@@ -116,14 +120,34 @@ export async function GET(req: NextRequest) {
     const urlObj = new URL(url);
     const origin = `${urlObj.protocol}//${urlObj.host}`;
     
-    // Agregar Referer y Origin específicos
-    if (url.includes('vidify')) {
-      headers['Referer'] = 'https://vidify.top/';
-      headers['Origin'] = 'https://vidify.top';
+    // 🆕 Usar headers personalizados si vienen del scraper
+    let referer: string;
+    let originHeader: string;
+    
+    if (customReferer) {
+      referer = customReferer;
+      originHeader = customOrigin || new URL(customReferer).origin;
+      console.log(`[VIDIFY-PROXY-M3U8] 🎯 Usando headers custom: Referer=${referer}, Origin=${originHeader}`);
     } else {
-      headers['Referer'] = origin;
-      headers['Origin'] = origin;
+      // Lógica anterior basada en detección
+      if (url.includes('vidify')) {
+        referer = 'https://vidify.top/';
+        originHeader = 'https://vidify.top';
+      } else if (url.includes('vidhide') || url.includes('vidhidepro') || url.includes('premilkyway')) {
+        referer = 'https://vidhide.com/';
+        originHeader = 'https://vidhide.com';
+      } else if (url.includes('kinej395aoo.com')) {
+        referer = origin;
+        originHeader = origin;
+      } else {
+        referer = origin;
+        originHeader = origin;
+      }
     }
+    
+    // Agregar Referer y Origin
+    headers['Referer'] = referer;
+    headers['Origin'] = originHeader;
 
     let response = await fetch(url, { 
       headers,
@@ -224,12 +248,14 @@ export async function GET(req: NextRequest) {
           
           // Decidir qué proxy usar según el tipo de archivo
           let proxiedUri: string;
+          const headersParam = customReferer ? `&referer=${encodeURIComponent(customReferer)}&origin=${encodeURIComponent(customOrigin || new URL(customReferer).origin)}` : '';
+          
           if (fullUrl.includes('.m3u8') || fullUrl.includes('.txt')) {
-            // Es un playlist, usar proxy de m3u8 (sin metadata porque no sabemos si es audio/video)
-            proxiedUri = `/api/vidify-proxy/m3u8?url=${encodeURIComponent(fullUrl)}`;
+            // Es un playlist, usar proxy de m3u8 (pasar headers si existen)
+            proxiedUri = `/api/vidify-proxy/m3u8?url=${encodeURIComponent(fullUrl)}${headersParam}`;
           } else {
-            // Es un segmento, usar proxy de segmentos
-            proxiedUri = `/api/vidify-proxy/seg?url=${encodeURIComponent(fullUrl)}`;
+            // Es un segmento, usar proxy de segmentos (pasar headers si existen)
+            proxiedUri = `/api/vidify-proxy/seg?url=${encodeURIComponent(fullUrl)}${headersParam}`;
           }
           
           // Reemplazar la URI en el tag
@@ -284,12 +310,14 @@ export async function GET(req: NextRequest) {
       }
       
       // Decidir qué proxy usar
+      const headersParam = customReferer ? `&referer=${encodeURIComponent(customReferer)}&origin=${encodeURIComponent(customOrigin || new URL(customReferer).origin)}` : '';
+      
       if (fullUrl.includes('.m3u8') || fullUrl.includes('.txt')) {
-        // Otro playlist, usar el proxy de m3u8
-        rewrittenLines.push(`/api/vidify-proxy/m3u8?url=${encodeURIComponent(fullUrl)}`);
+        // Otro playlist, usar el proxy de m3u8 (pasar headers si existen)
+        rewrittenLines.push(`/api/vidify-proxy/m3u8?url=${encodeURIComponent(fullUrl)}${headersParam}`);
       } else {
-        // Segmento de video, usar el proxy de segmentos
-        rewrittenLines.push(`/api/vidify-proxy/seg?url=${encodeURIComponent(fullUrl)}`);
+        // Segmento de video, usar el proxy de segmentos (pasar headers si existen)
+        rewrittenLines.push(`/api/vidify-proxy/seg?url=${encodeURIComponent(fullUrl)}${headersParam}`);
       }
     }
     

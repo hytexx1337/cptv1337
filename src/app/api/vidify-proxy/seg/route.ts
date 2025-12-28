@@ -10,6 +10,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get('url');
+  
+  // 🆕 Headers opcionales desde el scraper
+  const customReferer = searchParams.get('referer');
+  const customOrigin = searchParams.get('origin');
 
   if (!url) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
@@ -35,14 +39,33 @@ export async function GET(req: NextRequest) {
     const urlObj = new URL(url);
     const origin = `${urlObj.protocol}//${urlObj.host}`;
     
-    // Agregar Referer y Origin específicos
-    if (url.includes('vidify')) {
-      headers['Referer'] = 'https://vidify.top/';
-      headers['Origin'] = 'https://vidify.top';
+    // 🆕 Usar headers personalizados si vienen del scraper
+    let referer: string;
+    let originHeader: string;
+    
+    if (customReferer) {
+      referer = customReferer;
+      originHeader = customOrigin || new URL(customReferer).origin;
     } else {
-      headers['Referer'] = origin;
-      headers['Origin'] = origin;
+      // Lógica anterior basada en detección
+      if (url.includes('vidify')) {
+        referer = 'https://vidify.top/';
+        originHeader = 'https://vidify.top';
+      } else if (url.includes('vidhide') || url.includes('vidhidepro') || url.includes('premilkyway')) {
+        referer = 'https://vidhide.com/';
+        originHeader = 'https://vidhide.com';
+      } else if (url.includes('kinej395aoo.com')) {
+        referer = origin;
+        originHeader = origin;
+      } else {
+        referer = origin;
+        originHeader = origin;
+      }
     }
+    
+    // Agregar Referer y Origin
+    headers['Referer'] = referer;
+    headers['Origin'] = originHeader;
 
     // Agregar Range header si existe
     if (rangeHeader) {

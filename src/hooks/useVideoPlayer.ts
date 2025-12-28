@@ -1529,6 +1529,9 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
               // 🎨 Es un subtítulo ASS, disparar evento igual que la carga manual
               playerLogger.log(`🎨 [MODAL] Subtítulo ASS seleccionado, disparando evento: ${track.label}`);
               
+              // CRÍTICO: Cambiar el mode a 'showing' para que aparezca en el menú
+              track.mode = 'showing';
+              
               const event = new CustomEvent('ass-subtitle-available', {
                 detail: {
                   content: assContent,
@@ -1536,8 +1539,6 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                 }
               });
               window.dispatchEvent(event);
-              
-              // No cambiar el mode, dejar que VideoPlayer lo maneje
             } else {
               // Subtítulo VTT normal
               track.mode = 'showing';
@@ -1608,6 +1609,9 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                 // 🎨 Es un subtítulo ASS, disparar evento igual que la carga manual
                 playerLogger.log(`🎨 [MODAL] Subtítulo ASS seleccionado, disparando evento: ${track.label}`);
                 
+                // CRÍTICO: Cambiar el mode a 'showing' para que aparezca en el menú
+                track.mode = 'showing';
+                
                 const event = new CustomEvent('ass-subtitle-available', {
                   detail: {
                     content: assContent,
@@ -1615,8 +1619,6 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                   }
                 });
                 window.dispatchEvent(event);
-                
-                // No cambiar el mode, dejar que VideoPlayer lo maneje
               } else {
                 // Subtítulo VTT normal
                 track.mode = 'showing';
@@ -2332,13 +2334,16 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
           const hls = new Hls({
             debug: false,
             enableWorker: true,
-            maxBufferLength: 10,
-            maxMaxBufferLength: 20,
-            maxBufferSize: 10 * 1000 * 1000,
+            maxBufferLength: 20, // Buffer máximo 20s (era 10s)
+            maxMaxBufferLength: 40, // Límite absoluto 40s (era 20s)
+            maxBufferSize: 15 * 1000 * 1000, // 15 MB (era 10 MB)
+            maxBufferHole: 0.3, // Tolera huecos de 0.3s (antes default 0.5s)
             startLevel: -1, // Auto, pero con enableLowInitialBitrate: false usará la mejor disponible
             abrEwmaDefaultEstimate: 10000000, // Estimar 10 Mbps (alta) para forzar mejor calidad inicial
             capLevelOnFPSDrop: false, // NO bajar calidad por frame drops
             capLevelToPlayerSize: false, // NO limitar por tamaño del player
+            maxLoadingDelay: 4, // Max 4s esperando (antes default 8s)
+            maxStarvationDelay: 4, // Max 4s en starvation (antes default 8s)
           });
           
           const videoElement = videoRef.current;
@@ -2348,6 +2353,69 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
               hls.loadSource(streamUrl);
               playerLogger.log('✅ [HLS.JS] Source cambiado exitosamente');
             });
+            
+            // 🚨 ERROR RECOVERY: Cuando falla un segmento, hacer recovery automático
+            hls.on(Hls.Events.ERROR, (event, data) => {
+              if (data.fatal) {
+                playerLogger.error(`❌ [HLS-ERROR] Fatal: ${data.type} - ${data.details}`);
+                if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                  playerLogger.log('🔄 [HLS-RECOVERY] Intentando recuperar de error de red...');
+                  hls.startLoad();
+                } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                  playerLogger.log('🔄 [HLS-RECOVERY] Intentando recuperar de error de media...');
+                  hls.recoverMediaError();
+                }
+              } else if (data.details === 'fragLoadError' || data.details === 'fragLoadTimeOut') {
+                // Error no-fatal en segmento, pero forzar retry
+                playerLogger.warn(`⚠️ [HLS-ERROR] Segmento falló (${data.details}), forzando retry...`);
+                setTimeout(() => {
+                  if (videoElement.paused) return;
+                  hls.startLoad();
+                }, 500);
+              }
+            });
+            
+            // 🚨 AUTO-RECOVERY: Si se traba >5s sin progreso, hacer seek para "despertar"
+            let lastTime = 0;
+            let stuckCounter = 0;
+            const recoveryInterval = setInterval(() => {
+              if (!videoElement || !player) {
+                clearInterval(recoveryInterval);
+                return;
+              }
+              
+              const currentTime = videoElement.currentTime;
+              const isPlaying = !videoElement.paused && !videoElement.ended;
+              const isWaiting = videoElement.readyState < 3; // HAVE_FUTURE_DATA
+              
+              if (isPlaying && currentTime === lastTime && currentTime > 0) {
+                stuckCounter++;
+                if (stuckCounter >= 5) { // 5 segundos trabado
+                  playerLogger.warn(`⚠️ [HLS-RECOVERY] Video trabado ${stuckCounter}s, forzando seek + startLoad...`);
+                  
+                  // Intentar múltiples estrategias
+                  if (isWaiting) {
+                    // Si está esperando datos, reiniciar carga
+                    hls.startLoad();
+                  }
+                  
+                  // Micro-seek para despertar
+                  const newTime = Math.min(currentTime + 0.1, videoElement.duration || currentTime + 0.1);
+                  videoElement.currentTime = newTime;
+                  
+                  stuckCounter = 0;
+                }
+              } else {
+                stuckCounter = 0;
+              }
+              lastTime = currentTime;
+            }, 1000);
+            
+            // Limpiar interval cuando se cambie de source o se destruya
+            hls.once(Hls.Events.DESTROYING, () => {
+              clearInterval(recoveryInterval);
+            });
+            
             hlsRef.current = hls;
           }
         } else {
@@ -2603,12 +2671,15 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                       } catch {}
                     }
 
-                    // Aplicar viejo proxy solo para URLs absolutas externas, nunca para nuestro proxy local
+                    // Aplicar viejo proxy solo para URLs absolutas externas, nunca para nuestro proxy local o VPS Vidlink
                     if (!IS_BROWSER_PROXY && USE_HLS_PROXY && typeof target === 'string' && /^https?:\/\//i.test(target)) {
-                      const origin = new URL(target).origin + '/';
-                      const proxied = `/api/cors-proxy?url=${encodeURIComponent(target)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
-                      opts.uri = proxied;
-                      opts.url = proxied;
+                      // Excluir URLs del VPS Vidlink (81.17.102.98:8787) y Cloudflare Workers (*.workers.dev)
+                      if (!/81\.17\.102\.98:8787/i.test(target) && !/\.workers\.dev/i.test(target)) {
+                        const origin = new URL(target).origin + '/';
+                        const proxied = `/api/cors-proxy?url=${encodeURIComponent(target)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
+                        opts.uri = proxied;
+                        opts.url = proxied;
+                      }
                     }
                   } catch {}
                   return opts;
@@ -3542,13 +3613,21 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                     return streamUrl as string;
                   }
                   // Envolver solo si es HLS externo absoluto y está habilitado el viejo proxy
+                  // PERO excluir URLs del VPS Vidlink y Cloudflare Workers
                   if (USE_HLS_PROXY && videoType === 'application/x-mpegURL' && typeof BASE_STREAM_URL === 'string' && /^https?:\/\//i.test(BASE_STREAM_URL)) {
-                    let origin = '';
-                    try { origin = new URL(BASE_STREAM_URL!).origin + '/'; } catch {}
-                    const absoluteUrl = BASE_STREAM_URL!;
-                    const ref = origin || (new URL(absoluteUrl).origin + '/');
-                    return `/api/cors-proxy?url=${encodeURIComponent(absoluteUrl)}&ref=${encodeURIComponent(ref)}&forceRef=1`;
+                    // NO aplicar proxy a URLs del VPS Vidlink (81.17.102.98:8787) ni Cloudflare Workers (*.workers.dev)
+                    if (!/81\.17\.102\.98:8787/i.test(BASE_STREAM_URL) && !/\.workers\.dev/i.test(BASE_STREAM_URL)) {
+                      console.log('🔧 [PROXY-DEBUG] Aplicando cors-proxy a:', BASE_STREAM_URL.substring(0, 60));
+                      let origin = '';
+                      try { origin = new URL(BASE_STREAM_URL!).origin + '/'; } catch {}
+                      const absoluteUrl = BASE_STREAM_URL!;
+                      const ref = origin || (new URL(absoluteUrl).origin + '/');
+                      return `/api/cors-proxy?url=${encodeURIComponent(absoluteUrl)}&ref=${encodeURIComponent(ref)}&forceRef=1`;
+                    } else {
+                      console.log('✅ [PROXY-DEBUG] VPS/Worker detectado, SIN proxy:', BASE_STREAM_URL.substring(0, 60));
+                    }
                   }
+                  console.log('🎯 [PROXY-DEBUG] Usando streamUrl directo:', (streamUrl as string)?.substring(0, 60));
                   return streamUrl as string;
                 })(),
                 // Metadatos adicionales para Chromecast
@@ -3712,6 +3791,10 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                     player.reset();
                     const reloadSrc = (USE_HLS_PROXY && typeof streamUrl === 'string')
                       ? (() => {
+                          // NO aplicar proxy a URLs del VPS Vidlink ni Cloudflare Workers
+                          if (/81\.17\.102\.98:8787/i.test(streamUrl!) || /\.workers\.dev/i.test(streamUrl!)) {
+                            return streamUrl;
+                          }
                           const origin = new URL(streamUrl!).origin + '/';
                           return `/api/cors-proxy?url=${encodeURIComponent(streamUrl!)}&ref=${encodeURIComponent(origin)}`;
                         })()

@@ -90,9 +90,11 @@ export default function VideoPlayer({ videoRef, className = '' }: VideoPlayerPro
         // Buscar track activo
         let activeASSTrack: any = null;
         let hasActiveNonASSTrack = false;
+        let hasAnyActiveTrack = false;
         
         for (const track of tracksArray) {
           if (track.mode === 'showing') {
+            hasAnyActiveTrack = true;
             const isASS = (track as any).isASS === true;
             
             logger.log(`🎯 [VideoPlayer] Track activo encontrado: ${track.label} (isASS=${isASS})`);
@@ -117,15 +119,34 @@ export default function VideoPlayer({ videoRef, className = '' }: VideoPlayerPro
             setAssEnabled(true);
             manualASSActiveRef.current = false; // No es manual, es desde track
             
-            // Desactivar el track para que Video.js no intente parsearlo
-            activeASSTrack.mode = 'disabled';
+            // ⚠️ NO desactivar el track para que aparezca como seleccionado en el menú
+            // activeASSTrack.mode = 'disabled'; // ← COMENTADO
+            // Video.js no puede parsear ASS de todas formas, así que dejarlo como 'showing' es seguro
+            
+            // CRÍTICO: Si hay VTT activos también, desactivarlos porque el ASS tiene prioridad
+            if (hasActiveNonASSTrack) {
+              logger.log('🔒 [VideoPlayer] Desactivando tracks VTT porque ASS tiene prioridad');
+              for (const track of tracksArray) {
+                if (track.mode === 'showing' && !(track as any).isASS) {
+                  track.mode = 'disabled';
+                  logger.log(`🔒 [VideoPlayer] Desactivado: ${track.label}`);
+                }
+              }
+            }
           } else {
             logger.warn('⚠️ [VideoPlayer] Track ASS sin contenido!');
           }
         } else if (hasActiveNonASSTrack) {
-          // Si hay un track VTT activo, desactivar ASS
+          // Si hay un track VTT activo (y NO hay ASS), desactivar ASS
           if (assEnabled && !manualASSActiveRef.current) {
             logger.log('❌ [VideoPlayer] Desactivando ASS renderer (track VTT activo)');
+            setAssEnabled(false);
+            setAssContent(null);
+          }
+        } else if (!hasAnyActiveTrack) {
+          // Si NO hay ningún track activo (usuario seleccionó "Off"), desactivar ASS
+          if (assEnabled && !manualASSActiveRef.current) {
+            logger.log('❌ [VideoPlayer] Desactivando ASS renderer (usuario seleccionó Off)');
             setAssEnabled(false);
             setAssContent(null);
           }
@@ -167,22 +188,22 @@ export default function VideoPlayer({ videoRef, className = '' }: VideoPlayerPro
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
         {/* Contenedor para renderizado de subtítulos ASS - debe estar DENTRO de data-vjs-player para fullscreen */}
-        {assEnabled && (
-          <div
-            ref={assContainerRef}
-            className="vjs-ass-subtitle-container"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              zIndex: 100, // Por encima del video pero debajo de controles
-              overflow: 'hidden',
-            }}
-          />
-        )}
+        {/* SIEMPRE renderizar el contenedor, solo cambiar visibility */}
+        <div
+          ref={assContainerRef}
+          className="vjs-ass-subtitle-container"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 100, // Por encima del video pero debajo de controles
+            overflow: 'hidden',
+            visibility: assEnabled ? 'visible' : 'hidden',
+          }}
+        />
       </div>
     </div>
   );

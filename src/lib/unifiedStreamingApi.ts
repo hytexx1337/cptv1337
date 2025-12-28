@@ -1,9 +1,9 @@
 /**
  * Cliente para la API unificada de streaming
- * URL: https://streams.cineparatodos.lat
+ * URL: Local Next.js API
  */
 
-const STREAMING_API_URL = process.env.NEXT_PUBLIC_STREAMING_API_URL || 'https://streams.cineparatodos.lat';
+const STREAMING_API_URL = process.env.NEXT_PUBLIC_STREAMING_API_URL || '';
 
 export interface StreamSource {
   streamUrl: string;

@@ -406,7 +406,14 @@ export default function ClientPlayer({ type, id, season, episode }: ClientPlayer
           // Solo agregar a customStreamUrl si NO se usó como stream principal
           if (latino?.streamUrl && original?.playlistUrl) {
             // Hay Original, entonces Latino va como alternativa
-            setCustomStreamUrl(latino.streamUrl);
+            // 🆕 Si vienen headers, agregarlos a la URL del proxy
+            let latinoUrl = latino.streamUrl;
+            if (latino.headers) {
+              const headersParam = `&referer=${encodeURIComponent(latino.headers.referer)}&origin=${encodeURIComponent(latino.headers.origin)}`;
+              latinoUrl = `/api/vidify-proxy/m3u8?url=${encodeURIComponent(latino.streamUrl)}${headersParam}`;
+              logger.log(`🔑 [CLIENT-PLAYER] Latino con headers custom: Referer=${latino.headers.referer}`);
+            }
+            setCustomStreamUrl(latinoUrl);
             logger.log(`✅ [CLIENT-PLAYER] Latino agregado desde ${latino.provider}${latino.cached ? ' [CACHÉ]' : ''}`);
             streamCount++;
             // No afecta hasAnyStream porque es stream adicional, no principal
