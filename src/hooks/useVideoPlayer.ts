@@ -2660,9 +2660,11 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
 
                     let target = raw;
                     // Resolver URLs relativas (incluye las que empiezan con "/" y las relativas a directorio)
+                    // PERO NO resolver si empieza con /api/ (son rutas locales de Next.js)
                     if (
                       typeof target === 'string' &&
                       !/^https?:\/\//i.test(target) &&
+                      !target.startsWith('/api/') && // ⚠️ NO resolver rutas /api/* (locales)
                       typeof BASE_STREAM_URL === 'string' &&
                       /^https?:\/\//i.test(BASE_STREAM_URL)
                     ) {
