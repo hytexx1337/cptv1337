@@ -2654,7 +2654,7 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                     if (!raw) return opts;
 
                     // No tocar rutas de nuestros proxies locales
-                    if (typeof raw === 'string' && (raw.startsWith('/api/cors-proxy') || raw.startsWith('/api/hls-browser-proxy/'))) {
+                    if (typeof raw === 'string' && (raw.startsWith('/api/cors-proxy') || raw.startsWith('/api/vidify-proxy') || raw.startsWith('/api/hls-browser-proxy/'))) {
                       return opts;
                     }
 
