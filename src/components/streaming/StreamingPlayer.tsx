@@ -363,8 +363,11 @@ import io, { Socket } from 'socket.io-client';
   const getProxiedCustomStreamUrl = (url: string | undefined): string | undefined => {
     if (!url) return undefined;
     
+    logger.log(`🔍 [PROXY-HELPER] Input URL: ${url.substring(0, 80)}`);
+    
     // Si ya está proxificado (cualquier tipo de proxy), devolver tal cual
     if (url.startsWith('/api/cors-proxy') || url.startsWith('/api/vidify-proxy') || url.startsWith('/api/vidlink-proxy') || url.startsWith('/api/hls-browser-proxy')) {
+      logger.log(`✅ [PROXY-HELPER] Ya proxificado, devolviendo tal cual`);
       return url;
     }
     
@@ -387,13 +390,16 @@ import io, { Socket } from 'socket.io-client';
         } else {
           // Usar cors-proxy para otros casos
           const origin = new URL(url).origin + '/';
+          logger.log(`🌐 [PROXY] Usando cors-proxy para: ${hostname}`);
           return `/api/cors-proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
         }
       } catch {
+        logger.log(`⚠️ [PROXY-HELPER] Error parseando URL, devolviendo original`);
         return url;
       }
     }
     
+    logger.log(`✅ [PROXY-HELPER] URL relativa o desconocida, devolviendo tal cual`);
     return url;
   };
 
