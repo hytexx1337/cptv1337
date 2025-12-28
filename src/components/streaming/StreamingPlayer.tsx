@@ -364,7 +364,7 @@ import io, { Socket } from 'socket.io-client';
     if (!url) return undefined;
     
     // Si ya está proxificado (cualquier tipo de proxy), devolver tal cual
-    if (url.startsWith('/api/cors-proxy') || url.startsWith('/api/vidify-proxy') || url.startsWith('/api/vidlink-proxy') || url.startsWith('/api/hls-browser-proxy') || url.startsWith('http://localhost:8080')) {
+    if (url.startsWith('/api/cors-proxy') || url.startsWith('/api/vidify-proxy') || url.startsWith('/api/vidlink-proxy') || url.startsWith('/api/hls-browser-proxy')) {
       return url;
     }
     
@@ -372,14 +372,6 @@ import io, { Socket } from 'socket.io-client';
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         const hostname = new URL(url).hostname.toLowerCase();
-        
-        // 🔥 VIDLINK: Usar proxy standalone local (puerto 8080)
-        if (hostname.includes('vodvidl.site') || hostname.includes('vidlink.pro') || 
-            hostname.includes('frostveil') || hostname.includes('rainflare') || 
-            hostname.includes('cloudspark') || hostname.includes('.live')) {
-          logger.log(`🎬 [PROXY] Usando vidlink-proxy-server.mjs (8080): ${hostname}`);
-          return `http://localhost:8080/proxy?url=${encodeURIComponent(url)}`;
-        }
         
         // 🔍 Detectar si es un stream de Cuevana (o dominios conocidos de players)
         const isCuevanaPlayer = hostname.includes('embed69') || 
