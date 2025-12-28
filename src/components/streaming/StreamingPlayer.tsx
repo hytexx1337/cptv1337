@@ -23,35 +23,35 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
   
   // Japón -> Japonés
   if (firstCountry === 'JP') {
-    return { flag: '🇯🇵', label: 'ORIGINAL' };
+    return { flagCode: 'jp', label: 'ORIGINAL' };
   }
   // Korea -> Coreano
   if (firstCountry === 'KR') {
-    return { flag: '🇰🇷', label: 'ORIGINAL' };
+    return { flagCode: 'kr', label: 'ORIGINAL' };
   }
   // USA/UK/CA/AU -> Inglés
   if (['US', 'GB', 'CA', 'AU'].includes(firstCountry || '')) {
-    return { flag: '🇺🇸', label: 'ORIGINAL' };
+    return { flagCode: 'us', label: 'ORIGINAL' };
   }
   // España/Latinoamérica -> Español
   if (['ES', 'MX', 'AR', 'CO', 'CL'].includes(firstCountry || '')) {
-    return { flag: '🇪🇸', label: 'ORIGINAL' };
+    return { flagCode: 'es', label: 'ORIGINAL' };
   }
   // Francia -> Francés
   if (firstCountry === 'FR') {
-    return { flag: '🇫🇷', label: 'ORIGINAL' };
+    return { flagCode: 'fr', label: 'ORIGINAL' };
   }
   // China -> Chino
   if (firstCountry === 'CN') {
-    return { flag: '🇨🇳', label: 'ORIGINAL' };
+    return { flagCode: 'cn', label: 'ORIGINAL' };
   }
   // India -> Hindi
   if (firstCountry === 'IN') {
-    return { flag: '🇮🇳', label: 'ORIGINAL' };
+    return { flagCode: 'in', label: 'ORIGINAL' };
   }
   
   // Por defecto (desconocido)
-  return { flag: '🌍', label: 'ORIGINAL' };
+  return { flagCode: 'world', label: 'ORIGINAL' };
 };
 
   interface StreamingPlayerProps {
@@ -1708,7 +1708,8 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                   right: `${audioMenuPosition.right}px`
                 }}
               >
-                <div className="bg-black/95 backdrop-blur-md rounded-md overflow-hidden shadow-2xl border border-white/20">
+                <div className="bg-gray-900/98 backdrop-blur-md rounded-lg overflow-hidden shadow-2xl border-2 border-gray-700">
+                  {/* ORIGINAL */}
                   <button
                     onClick={() => {
                       if (selectedAudio !== 'original') {
@@ -1736,16 +1737,25 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       }
                       setShowAudioMenu(false);
                     }}
-                    className={`w-full px-5 py-2.5 text-left text-sm font-medium hover:bg-white/10 transition-colors ${
-                      selectedAudio === 'original' ? 'text-white bg-white/10' : 'text-white/80'
+                    className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 ${
+                      selectedAudio === 'original' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="text-2xl">{getOriginalLanguageInfo(movieMetadata?.originCountries).flag}</span>
-                      <span>{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
-                    </span>
+                    <img 
+                      src={`https://flagcdn.com/w40/${getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode}.png`}
+                      alt="Flag"
+                      className="w-8 h-6 object-cover rounded shadow-md"
+                      onError={(e) => {
+                        // Fallback si la imagen no carga
+                        e.currentTarget.src = '/flags/world.png';
+                      }}
+                    />
+                    <span className="text-base">{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
                   </button>
                   
+                  {/* ENGLISH DUB */}
                   {englishDubStreamUrl && (
                     <button
                       onClick={() => {
@@ -1774,17 +1784,22 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                         setShowAudioMenu(false);
                       }}
-                      className={`w-full px-5 py-2.5 text-left text-sm font-medium hover:bg-white/10 transition-colors ${
-                        selectedAudio === 'englishDub' ? 'text-white bg-white/10' : 'text-white/80'
+                      className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 border-t border-gray-800 ${
+                        selectedAudio === 'englishDub' 
+                          ? 'bg-blue-600 text-white shadow-lg' 
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                       }`}
                     >
-                      <span className="flex items-center gap-2">
-                        <span className="text-2xl">🇺🇸</span>
-                        <span>ENGLISH</span>
-                      </span>
+                      <img 
+                        src="https://flagcdn.com/w40/us.png"
+                        alt="USA Flag"
+                        className="w-8 h-6 object-cover rounded shadow-md"
+                      />
+                      <span className="text-base">ENGLISH</span>
                     </button>
                   )}
                   
+                  {/* LATINO */}
                   {customStreamUrl && (
                     <button
                       onClick={() => {
@@ -1813,14 +1828,18 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                         setShowAudioMenu(false);
                       }}
-                      className={`w-full px-5 py-2.5 text-left text-sm font-medium hover:bg-white/10 transition-colors ${
-                        selectedAudio === 'latino' ? 'text-white bg-white/10' : 'text-white/80'
+                      className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 border-t border-gray-800 ${
+                        selectedAudio === 'latino' 
+                          ? 'bg-blue-600 text-white shadow-lg' 
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                       }`}
                     >
-                      <span className="flex items-center gap-2">
-                        <span className="text-2xl">🇲🇽</span>
-                        <span>LATINO</span>
-                      </span>
+                      <img 
+                        src="https://flagcdn.com/w40/mx.png"
+                        alt="Mexico Flag"
+                        className="w-8 h-6 object-cover rounded shadow-md"
+                      />
+                      <span className="text-base">LATINO</span>
                     </button>
                   )}
                 </div>
