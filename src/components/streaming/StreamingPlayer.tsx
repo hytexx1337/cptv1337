@@ -208,44 +208,97 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
 
     const calculateMenuPosition = () => {
       const audioButton = document.querySelector('.vjs-audio-selector-button');
-      const playerEl = document.querySelector('.video-js');
       
-      if (audioButton && playerEl) {
+      if (audioButton) {
         const buttonRect = audioButton.getBoundingClientRect();
-        const playerRect = playerEl.getBoundingClientRect();
         
-        // Calcular posición relativa al reproductor
-        const rightOffset = playerRect.right - buttonRect.right;
-        const bottomOffset = playerRect.bottom - buttonRect.bottom;
+        // Usar coordenadas absolutas desde el viewport
+        // El menú debe aparecer ARRIBA del botón
+        const menuHeight = 120; // Altura aproximada del menú (3 opciones * 40px)
+        const bottom = window.innerHeight - buttonRect.top + 10; // Arriba del botón con 10px de espacio
+        const right = window.innerWidth - buttonRect.right - 8; // Alineado con el botón
         
         setAudioMenuPosition({
-          right: rightOffset - 8, // -8px para ajuste fino
-          bottom: bottomOffset + 80 // +80px para aparecer arriba del botón
+          right,
+          bottom
         });
         
-        logger.log('🎧 [AUDIO-MENU] Posición calculada:', { rightOffset, bottomOffset });
+        logger.log('🎧 [AUDIO-MENU] Posición calculada:', { 
+          right, 
+          bottom, 
+          isFullscreen,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+          buttonTop: buttonRect.top,
+          buttonRight: buttonRect.right,
+          buttonBottom: buttonRect.bottom
+        });
+      } else {
+        logger.warn('🎧 [AUDIO-MENU] ⚠️ No se encontró el botón:', {
+          isFullscreen
+        });
       }
     };
 
+    // Calcular inmediatamente
     calculateMenuPosition();
+    
+    // Y también después de pequeños delays para dar tiempo al fullscreen
+    setTimeout(calculateMenuPosition, 50);
+    setTimeout(calculateMenuPosition, 200);
+    setTimeout(calculateMenuPosition, 500); // 🆕 Un delay más largo
+    
+    // Recalcular posición al cambiar tamaño de ventana o fullscreen
+    window.addEventListener('resize', calculateMenuPosition);
     
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      const isAudioButton = target.closest('.vjs-audio-selector-button');
+      const isAudioMenu = target.closest('[data-audio-menu]');
+      
+      logger.log('🎧 [AUDIO-MENU] Click detectado:', {
+        isAudioButton: !!isAudioButton,
+        isAudioMenu: !!isAudioMenu,
+        targetTag: target.tagName,
+        targetClass: target.className
+      });
+      
       // Cerrar si el click NO es en el botón de audio ni en el menú
-      if (!target.closest('.vjs-audio-selector-button') && !target.closest('[data-audio-menu]')) {
+      if (!isAudioButton && !isAudioMenu) {
+        logger.log('🎧 [AUDIO-MENU] ❌ Cerrando menú (click outside)');
         setShowAudioMenu(false);
       }
     };
 
-    // Agregar listener con un pequeño delay para evitar que se cierre inmediatamente
+    // Agregar listener al document Y al video element
+    const videoElement = document.querySelector('.video-js video');
+    const playerElement = document.querySelector('.video-js');
+    
     setTimeout(() => {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('click', handleClickOutside, true); // 🆕 true = capture phase
+      if (videoElement) {
+        videoElement.addEventListener('click', handleClickOutside, true);
+        logger.log('🎧 [AUDIO-MENU] ✅ Listener agregado al video element');
+      }
+      if (playerElement) {
+        playerElement.addEventListener('click', handleClickOutside, true);
+        logger.log('🎧 [AUDIO-MENU] ✅ Listener agregado al player element');
+      }
+      logger.log('🎧 [AUDIO-MENU] ✅ Listener de click outside agregado');
     }, 100);
 
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside, true);
+      if (videoElement) {
+        videoElement.removeEventListener('click', handleClickOutside, true);
+      }
+      if (playerElement) {
+        playerElement.removeEventListener('click', handleClickOutside, true);
+      }
+      window.removeEventListener('resize', calculateMenuPosition);
+      logger.log('🎧 [AUDIO-MENU] 🗑️ Listeners removidos');
     };
-  }, [showAudioMenu]);
+  }, [showAudioMenu, isFullscreen]); // 🆕 Añadir isFullscreen como dependencia
   
   // Reportar tiempo actual al callback (útil para admin panel)
   useEffect(() => {
@@ -1702,16 +1755,44 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
             {(customStreamUrl || englishDubStreamUrl) && showAudioMenu && createPortal(
               <div 
                 data-audio-menu
-                className="fixed z-[9999]"
                 style={{
+                  position: 'fixed',
                   bottom: `${audioMenuPosition.bottom}px`,
-                  right: `${audioMenuPosition.right}px`
+                  right: `${audioMenuPosition.right}px`,
+                  zIndex: 99999,
+                  pointerEvents: 'auto'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  logger.log('🎧 [AUDIO-MENU] Click en contenedor del menú');
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  logger.log('🎧 [AUDIO-MENU] MouseDown en contenedor del menú');
+                }}
+                onMouseUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  logger.log('🎧 [AUDIO-MENU] MouseUp en contenedor del menú');
                 }}
               >
-                <div className="bg-gray-900/98 backdrop-blur-md rounded-lg overflow-hidden shadow-2xl border-2 border-gray-700">
+                <div style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(75, 85, 99, 0.5)',
+                  minWidth: '180px'
+                }}>
                   {/* ORIGINAL */}
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      logger.log('🎧 [AUDIO-MENU] Click en botón ORIGINAL');
                       if (selectedAudio !== 'original') {
                         // Guardar posición actual
                         if (playerRef.current) {
@@ -1737,28 +1818,60 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       }
                       setShowAudioMenu(false);
                     }}
-                    className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 ${
-                      selectedAudio === 'original' 
-                        ? 'bg-blue-600 text-white shadow-lg' 
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    }`}
+                    style={{
+                      width: '100%',
+                      padding: '8px 16px',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: '10px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      backgroundColor: selectedAudio === 'original' ? '#374151' : 'transparent',
+                      color: selectedAudio === 'original' ? 'white' : '#d1d5db'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedAudio !== 'original') {
+                        e.currentTarget.style.backgroundColor = '#1f2937';
+                        e.currentTarget.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedAudio !== 'original') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#d1d5db';
+                      }
+                    }}
                   >
                     <img 
                       src={`/flags/${getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode}.png`}
                       alt="Flag"
-                      className="w-8 h-6 object-cover rounded shadow-md"
+                      style={{
+                        width: '24px',
+                        height: '16px',
+                        objectFit: 'cover',
+                        borderRadius: '2px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                        flexShrink: 0
+                      }}
                       onError={(e) => {
-                        // Fallback si la imagen no carga
                         e.currentTarget.src = '/flags/world.png';
                       }}
                     />
-                    <span className="text-base">{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
                   </button>
                   
                   {/* ENGLISH DUB */}
                   {englishDubStreamUrl && (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        logger.log('🎧 [AUDIO-MENU] Click en botón ENGLISH');
                         if (selectedAudio !== 'englishDub') {
                           // Guardar posición actual
                           if (playerRef.current) {
@@ -1784,25 +1897,59 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                         setShowAudioMenu(false);
                       }}
-                      className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 border-t border-gray-800 ${
-                        selectedAudio === 'englishDub' 
-                          ? 'bg-blue-600 text-white shadow-lg' 
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
+                      style={{
+                        width: '100%',
+                        padding: '8px 16px',
+                        textAlign: 'left',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: '10px',
+                        border: 'none',
+                        borderTop: '1px solid #1f2937',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        backgroundColor: selectedAudio === 'englishDub' ? '#374151' : 'transparent',
+                        color: selectedAudio === 'englishDub' ? 'white' : '#d1d5db'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedAudio !== 'englishDub') {
+                          e.currentTarget.style.backgroundColor = '#1f2937';
+                          e.currentTarget.style.color = 'white';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedAudio !== 'englishDub') {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = '#d1d5db';
+                        }
+                      }}
                     >
                       <img 
                         src="/flags/us.png"
                         alt="USA Flag"
-                        className="w-8 h-6 object-cover rounded shadow-md"
+                        style={{
+                          width: '24px',
+                          height: '16px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                          flexShrink: 0
+                        }}
                       />
-                      <span className="text-base">ENGLISH</span>
+                      <span style={{ whiteSpace: 'nowrap' }}>ENGLISH</span>
                     </button>
                   )}
                   
                   {/* LATINO */}
                   {customStreamUrl && (
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        logger.log('🎧 [AUDIO-MENU] Click en botón LATINO');
                         if (selectedAudio !== 'latino') {
                           // Guardar posición actual
                           if (playerRef.current) {
@@ -1828,23 +1975,54 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                         setShowAudioMenu(false);
                       }}
-                      className={`w-full px-6 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center gap-3 border-t border-gray-800 ${
-                        selectedAudio === 'latino' 
-                          ? 'bg-blue-600 text-white shadow-lg' 
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }`}
+                      style={{
+                        width: '100%',
+                        padding: '8px 16px',
+                        textAlign: 'left',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: '10px',
+                        border: 'none',
+                        borderTop: '1px solid #1f2937',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        backgroundColor: selectedAudio === 'latino' ? '#374151' : 'transparent',
+                        color: selectedAudio === 'latino' ? 'white' : '#d1d5db'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedAudio !== 'latino') {
+                          e.currentTarget.style.backgroundColor = '#1f2937';
+                          e.currentTarget.style.color = 'white';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedAudio !== 'latino') {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = '#d1d5db';
+                        }
+                      }}
                     >
                       <img 
                         src="/flags/mx.png"
                         alt="Mexico Flag"
-                        className="w-8 h-6 object-cover rounded shadow-md"
+                        style={{
+                          width: '24px',
+                          height: '16px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                          flexShrink: 0
+                        }}
                       />
-                      <span className="text-base">LATINO</span>
+                      <span style={{ whiteSpace: 'nowrap' }}>LATINO</span>
                     </button>
                   )}
                 </div>
               </div>,
-              document.querySelector('.video-js') || document.body
+              document.body
             )}
 
             {/* Next Up Overlay - créditos o últimos 10 segundos */}
