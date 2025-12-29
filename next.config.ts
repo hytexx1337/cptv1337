@@ -119,6 +119,7 @@ const nextConfig: NextConfig = {
         fs: false,
         path: false,
         crypto: false,
+        'original-fs': false, // Fix para adm-zip
       };
       
       // Configuración específica para FFmpeg

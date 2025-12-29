@@ -460,7 +460,36 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                                 hostname.includes('player') ||
                                 url.includes('.m3u8'); // Cualquier M3U8 externo
         
-        if (isCuevanaPlayer) {
+        // 🆕 Detectar el tipo de player por hostname
+        const isStreamwish = hostname.includes('streamwish') || 
+                           hostname.includes('cavanhabg') ||
+                           hostname.includes('x8oi6owwkjoewr') ||
+                           hostname.includes('meadowlarkdesignstudio');
+        
+        const isVidhide = hostname.includes('vidhide') || 
+                         hostname.includes('filelions') || 
+                         hostname.includes('premilkyway') || 
+                         hostname.includes('dintezuvio') ||
+                         hostname.includes('callistanise') ||
+                         hostname.includes('spacecolonyplans');
+        
+        if (isStreamwish) {
+          // 🆕 Usar streamwish-proxy
+          logger.log(`🎬 [PROXY] Usando streamwish-proxy para: ${hostname}`);
+          // Extraer referer/origin desde la URL si es posible
+          // Las URLs de streamwish suelen ser: cavanhabg.com/stream/xxx/yyy/timestamp/fileId/...
+          // El referer correcto es: streamwish.to/e/XXXX (pero no lo tenemos aquí)
+          // Por ahora, usar el hostname del M3U8 como referer
+          const referer = `https://${hostname}/`;
+          const origin = `https://${hostname}`;
+          return `/api/cuevana-proxy/streamwish/m3u8?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}&origin=${encodeURIComponent(origin)}`;
+        } else if (isVidhide) {
+          // 🆕 Usar vidhide-proxy
+          logger.log(`🎬 [PROXY] Usando vidhide-proxy para: ${hostname}`);
+          const referer = `https://${hostname}/`;
+          const origin = `https://${hostname}`;
+          return `/api/cuevana-proxy/vidhide/m3u8?url=${encodeURIComponent(url)}&referer=${encodeURIComponent(referer)}&origin=${encodeURIComponent(origin)}`;
+        } else if (isCuevanaPlayer) {
           // Usar vidify-proxy (más robusto para M3U8s)
           logger.log(`🎬 [PROXY] Usando vidify-proxy para: ${hostname}`);
           return `/api/vidify-proxy/m3u8?url=${encodeURIComponent(url)}`;
