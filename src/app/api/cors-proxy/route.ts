@@ -75,6 +75,12 @@ export async function HEAD(req: NextRequest) {
     const isWoff2Playlist = /\/(master|index|playlist)[\.\-].*\.woff2(\?|$)/i.test(target);
     if (/\.(m3u8|txt)(\?|$)/i.test(target) || isWoff2Playlist) {
       type = 'application/x-mpegURL';
+    } else if (target.includes('vodvidl.site') || target.includes('vidlink') || 
+               target.includes('videostr.net') || target.includes('sunmelt')) {
+      // Vidlink usa base64 encoding y extensiones fake
+      if (!/\/(master|index|playlist)/i.test(target)) {
+        type = 'video/mp2t';
+      }
     } else if (/\.(ts|woff2)(\?|$)/i.test(target)) {
       type = 'video/mp2t';
     } else if (/\/seg-\d+-[^\/]+\.(js|css|txt|png|jpg|jpeg|webp|ico|woff|woff2|svg|json|html|xml|ts|m4s|mp4)(\?|$)/i.test(target) ||
@@ -242,6 +248,14 @@ export async function GET(req: NextRequest) {
   const isWoff2Playlist = /\/(master|index|playlist)[\.\-].*\.woff2(\?|$)/i.test(target);
   if (/\.(m3u8|txt)(\?|$)/i.test(target) || isWoff2Playlist) {
     typeOverride = 'application/vnd.apple.mpegurl';
+  } else if (target.includes('vodvidl.site') || target.includes('vidlink') || 
+             target.includes('videostr.net') || target.includes('sunmelt')) {
+    // Vidlink usa base64 encoding y extensiones fake (.jpg, .js, .html, etc)
+    // TODO lo que venga de estos dominios es video/mp2t
+    if (!/\/(master|index|playlist)/i.test(target)) {
+      typeOverride = 'video/mp2t';
+      console.log(`🎬 [CORS-PROXY] Vidlink detectado, forzando video/mp2t: ${target.substring(0, 100)}...`);
+    }
   } else if (/\.(ts|woff2)(\?|$)/i.test(target)) {
     // Segmentos HLS (incluso disfrazados como .woff2)
     typeOverride = 'video/mp2t';
