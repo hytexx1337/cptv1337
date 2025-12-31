@@ -17,7 +17,78 @@ import { streamLogger, subtitleLogger, logger } from '@/lib/logger';
 import { watchHistory } from '@/lib/watch-history';
 import io, { Socket } from 'socket.io-client';
 
-// Helper para determinar idioma original y bandera según país de origen
+// Componente de bandera SVG inline (sin latencia)
+const FlagIcon = ({ code }: { code: string }) => {
+  const flags: Record<string, React.ReactElement> = {
+    us: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="16" fill="#B22234"/>
+        <path d="M0,0h24v1.23H0V0z M0,2.46h24v1.23H0V2.46z M0,4.92h24v1.23H0V4.92z M0,7.38h24v1.23H0V7.38z M0,9.85h24v1.23H0V9.85z M0,12.31h24v1.23H0V12.31z M0,14.77h24V16H0V14.77z" fill="#fff"/>
+        <rect width="9.6" height="7" fill="#3C3B6E"/>
+      </svg>
+    ),
+    mx: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="8" height="16" fill="#006847"/>
+        <rect x="8" width="8" height="16" fill="#fff"/>
+        <rect x="16" width="8" height="16" fill="#CE1126"/>
+        <circle cx="12" cy="8" r="2" fill="#C8A06C"/>
+      </svg>
+    ),
+    jp: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="16" fill="#fff"/>
+        <circle cx="12" cy="8" r="4.8" fill="#BC002D"/>
+      </svg>
+    ),
+    kr: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="16" fill="#fff"/>
+        <circle cx="12" cy="8" r="4" fill="#C60C30"/>
+        <circle cx="12" cy="8" r="4" fill="#003478" clipPath="inset(0 50% 0 0)"/>
+      </svg>
+    ),
+    es: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="4" fill="#AA151B"/>
+        <rect y="4" width="24" height="8" fill="#F1BF00"/>
+        <rect y="12" width="24" height="4" fill="#AA151B"/>
+      </svg>
+    ),
+    fr: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="8" height="16" fill="#002395"/>
+        <rect x="8" width="8" height="16" fill="#fff"/>
+        <rect x="16" width="8" height="16" fill="#ED2939"/>
+      </svg>
+    ),
+    cn: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="16" fill="#DE2910"/>
+        <path d="M5,3l0.5,1.5h1.6L5.8,5.6l0.5,1.5L5,6L3.7,7.1l0.5-1.5L2.9,4.5h1.6L5,3z" fill="#FFDE00"/>
+      </svg>
+    ),
+    in: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="5.33" fill="#FF9933"/>
+        <rect y="5.33" width="24" height="5.33" fill="#fff"/>
+        <rect y="10.66" width="24" height="5.34" fill="#138808"/>
+        <circle cx="12" cy="8" r="2" fill="#000080"/>
+      </svg>
+    ),
+    world: (
+      <svg width="24" height="16" viewBox="0 0 24 16" style={{ borderRadius: '2px', overflow: 'hidden' }}>
+        <rect width="24" height="16" fill="#4A5568"/>
+        <circle cx="12" cy="8" r="5" fill="#68D391" opacity="0.6"/>
+        <path d="M12,3 Q15,5 15,8 Q15,11 12,13 Q9,11 9,8 Q9,5 12,3" fill="#3182CE" opacity="0.6"/>
+      </svg>
+    ),
+  };
+
+  return flags[code] || flags.world;
+};
+
+// Helper para determinar idioma original y código de bandera según país de origen
 const getOriginalLanguageInfo = (originCountries?: string[]) => {
   const firstCountry = originCountries?.[0];
   
@@ -149,14 +220,7 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
     }
   }, [directStreamUrl, goFileUrl, englishDubStreamUrl, customStreamUrl, selectedAudio]);
   
-  // Precargar banderas para evitar parpadeos (cache del navegador)
-  useEffect(() => {
-    const flagsToPreload = ['us', 'mx', 'es', 'jp', 'kr', 'fr', 'cn', 'in', 'world'];
-    flagsToPreload.forEach(flag => {
-      const img = new Image();
-      img.src = `/flags/${flag}.png`;
-    });
-  }, []);
+  // Ya no es necesario precargar banderas (usamos emojis nativos)
   
   // Watch Party
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -1853,21 +1917,13 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                       }
                     }}
                   >
-                    <img 
-                      src={`/flags/${getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode}.png`}
-                      alt="Flag"
-                      style={{
-                        width: '24px',
-                        height: '16px',
-                        objectFit: 'cover',
-                        borderRadius: '2px',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                        flexShrink: 0
-                      }}
-                      onError={(e) => {
-                        e.currentTarget.src = '/flags/world.png';
-                      }}
-                    />
+                    <span style={{ 
+                      display: 'inline-flex',
+                      marginRight: '6px',
+                      flexShrink: 0
+                    }}>
+                      <FlagIcon code={getOriginalLanguageInfo(movieMetadata?.originCountries).flagCode} />
+                    </span>
                     <span style={{ whiteSpace: 'nowrap' }}>{getOriginalLanguageInfo(movieMetadata?.originCountries).label}</span>
                   </button>
                   
@@ -1943,18 +1999,13 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                       }}
                     >
-                      <img 
-                        src="/flags/us.png"
-                        alt="USA Flag"
-                        style={{
-                          width: '24px',
-                          height: '16px',
-                          objectFit: 'cover',
-                          borderRadius: '2px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                          flexShrink: 0
-                        }}
-                      />
+                      <span style={{ 
+                        display: 'inline-flex',
+                        marginRight: '6px',
+                        flexShrink: 0
+                      }}>
+                        <FlagIcon code="us" />
+                      </span>
                       <span style={{ whiteSpace: 'nowrap' }}>ENGLISH</span>
                     </button>
                   )}
@@ -2031,18 +2082,13 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
                         }
                       }}
                     >
-                      <img 
-                        src="/flags/mx.png"
-                        alt="Mexico Flag"
-                        style={{
-                          width: '24px',
-                          height: '16px',
-                          objectFit: 'cover',
-                          borderRadius: '2px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                          flexShrink: 0
-                        }}
-                      />
+                      <span style={{ 
+                        display: 'inline-flex',
+                        marginRight: '6px',
+                        flexShrink: 0
+                      }}>
+                        <FlagIcon code="mx" />
+                      </span>
                       <span style={{ whiteSpace: 'nowrap' }}>LATINO</span>
                     </button>
                   )}
