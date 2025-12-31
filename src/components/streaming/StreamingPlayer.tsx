@@ -149,6 +149,15 @@ const getOriginalLanguageInfo = (originCountries?: string[]) => {
     }
   }, [directStreamUrl, goFileUrl, englishDubStreamUrl, customStreamUrl, selectedAudio]);
   
+  // Precargar banderas para evitar parpadeos (cache del navegador)
+  useEffect(() => {
+    const flagsToPreload = ['us', 'mx', 'es', 'jp', 'kr', 'fr', 'cn', 'in', 'world'];
+    flagsToPreload.forEach(flag => {
+      const img = new Image();
+      img.src = `/flags/${flag}.png`;
+    });
+  }, []);
+  
   // Watch Party
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isWatchPartyActive, setIsWatchPartyActive] = useState(false);

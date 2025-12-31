@@ -2675,8 +2675,8 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
 
                     // Aplicar viejo proxy solo para URLs absolutas externas, nunca para nuestro proxy local o VPS Vidlink
                     if (!IS_BROWSER_PROXY && USE_HLS_PROXY && typeof target === 'string' && /^https?:\/\//i.test(target)) {
-                      // Excluir URLs del VPS Vidlink (81.17.102.98:8787) y Cloudflare Workers (*.workers.dev)
-                      if (!/81\.17\.102\.98:8787/i.test(target) && !/\.workers\.dev/i.test(target)) {
+                      // Excluir URLs de Vidlink (vidlink.cineparatodos.lat) y Cloudflare Workers (*.workers.dev)
+                      if (!/vidlink\.cineparatodos\.lat/i.test(target) && !/\.workers\.dev/i.test(target)) {
                         const origin = new URL(target).origin + '/';
                         const proxied = `/api/cors-proxy?url=${encodeURIComponent(target)}&ref=${encodeURIComponent(origin)}&forceRef=1`;
                         opts.uri = proxied;
@@ -3617,8 +3617,8 @@ export function useVideoPlayer({ streamUrl, videoDuration, movieTitle, moviePost
                   // Envolver solo si es HLS externo absoluto y está habilitado el viejo proxy
                   // PERO excluir URLs del VPS Vidlink, Cloudflare Workers y proxies locales
                   if (USE_HLS_PROXY && videoType === 'application/x-mpegURL' && typeof BASE_STREAM_URL === 'string' && /^https?:\/\//i.test(BASE_STREAM_URL) && !BASE_STREAM_URL.includes('/api/')) {
-                    // NO aplicar proxy a URLs del VPS Vidlink (81.17.102.98:8787), Cloudflare Workers (*.workers.dev) ni proxies locales (/api/*)
-                    if (!/81\.17\.102\.98:8787/i.test(BASE_STREAM_URL) && !/\.workers\.dev/i.test(BASE_STREAM_URL)) {
+                    // NO aplicar proxy a URLs de Vidlink (vidlink.cineparatodos.lat), Cloudflare Workers (*.workers.dev) ni proxies locales (/api/*)
+                    if (!/vidlink\.cineparatodos\.lat/i.test(BASE_STREAM_URL) && !/\.workers\.dev/i.test(BASE_STREAM_URL)) {
                       console.log('🔧 [PROXY-DEBUG] Aplicando cors-proxy a:', BASE_STREAM_URL.substring(0, 60));
                       let origin = '';
                       try { origin = new URL(BASE_STREAM_URL!).origin + '/'; } catch {}
